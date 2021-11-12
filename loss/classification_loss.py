@@ -19,7 +19,7 @@ class ClassificationLoss(nn.Module):
 
         logits = self.fc(fused)
 
-        criterion = nn.BCEWithLogitsLoss()
+        criterion = nn.BCEWithLogitsLoss(reduction='mean')
 
         loss = criterion(logits, labels)
 
