@@ -81,7 +81,7 @@ class Conv1(nn.Module):
         self.out_channels = out_channels
         self.conv = nn.Conv2d(self.in_channels, self.out_channels, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
 
-    def forward(self,x):
+    def forward(self, x):
 
         x = self.conv(x)
 
