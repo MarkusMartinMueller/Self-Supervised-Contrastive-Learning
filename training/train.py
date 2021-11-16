@@ -26,12 +26,12 @@ def train(trainloader, model, criterion , optimizer,  epoch,train_writer):
         #imgs = data['img'].to(torch.device("cuda"))
         #labels = data['label'].to(torch.device("cuda"))
 
-        logtis = model(imgs)
+        logits = model(imgs)
 
         ### detach gradients
         optimizer.zero_grad()
 
-        loss = criterion(logtis, labels)
+        loss = criterion(logits, labels)
 
         loss.backward()
         optimizer.step()
@@ -74,7 +74,7 @@ def val(valloader, model, criterion , optimizer,  epoch, val_writer):
 
     y_pred = np.argmax(logits, axis=1)
 
-    acc = accuracy_score(y_true, y_pred)
+
 
     info = {
         'Acc': acc

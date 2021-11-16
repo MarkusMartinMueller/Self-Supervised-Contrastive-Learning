@@ -56,6 +56,69 @@ BAND_STATS = {
             'VH': 33.59768295288086,
             'R': 1.08
         }
+    }
+}
+
+
+class dataGenBigEarthLMDB:
+
+    def __init__(self, root_folder_s1,root_folder_s2, imgTransform=None, state='train',
+                 train_csv=None, val_csv=None, test_csv=None):
+
+        #self.env = lmdb.open(bigEarthPthLMDB, readonly=True, lock=False, readahead=False, meminit=False)
+        self.root_folder_s1 = root_folder_s1
+        self.root_folder_s2 = root_folder_s2
+        self.imgTransform = imgTransform
+        self.train_bigEarth_csv = train_csv
+        self.val_bigEarth_csv = val_csv
+        self.test_bigEarth_csv = test_csv
+        self.state = state
+        self.patch_names = []
+        self.readingCSV()
+
+    def readingCSV(self):
+        if self.state == 'train':
+            with open(self.train_bigEarth_csv, 'r') as f:
+                csv_reader = csv.reader(f)
+                for row in csv_reader:
+                    self.patch_names.append(row)
+
+        elif self.state == 'val':
+            with open(self.val_bigEarth_csv, 'r') as f:
+                csv_reader = csv.reader(f)
+                for row in csv_reader:
+                    self.patch_names.append(row)
+        elif self.state == "test":
+            with open(self.test_bigEarth_csv, 'r') as f:
+                csv_reader = csv.reader(f)
+                for row in csv_reader:
+                    self.patch_names.append(row)
+
+    def __len__(self):
+
+        return len(self.patch_names)
+
+    def __getitem__(self, idx):
+
+        patch_name = self.patch_names[idx]
+
+
+        return self._getDataUp(patch_name, idx)
+
+
+    def _getDataUp(self, patch_name, idx):
+
+
+
+
+
+        sample = {'bands10': bands10.astype(np.float32), 'bands20': bands20.astype(np.float32),
+                  'label': multiHots.astype(np.float32)}
+
+
+
+
+        return sample
 
 
 

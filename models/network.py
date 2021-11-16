@@ -6,7 +6,6 @@
 
 import torch
 import torch.nn as nn
-import torchvision.models as models
 from ResNet import ResNet50_S1, ResNet50_S2, ResNet50_joint
 
 class TwoBranch(nn.Module):
@@ -48,7 +47,7 @@ class TwoBranch(nn.Module):
         """
 
         if type == "separate":
-            return self.forward_separate(s_1,s_2)
+            return self.forward_separate(s_1, s_2)
         if type == "joint":
             return self.forward_joint(s_1, s_2)
 
@@ -91,8 +90,8 @@ class TwoBranch(nn.Module):
 
 if __name__ == "__main__":
 
-    inputs_s1 = torch.randn((4, 10, 120, 120))
-    inputs_s2 = torch.randn((4, 2, 120, 120))
+    inputs_s1 = torch.randn((4, 10, 224, 224))
+    inputs_s2 = torch.randn((4, 2, 224, 224))
     resnet_s1 = ResNet50_S1()
     resnet_s2 = ResNet50_S2()
     resnet_joint = ResNet50_joint()
