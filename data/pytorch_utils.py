@@ -324,7 +324,6 @@ def prep_lmdb_files(root_folder, out_folder,modality,patch_names_list, GDAL_EXIS
 
 
     elif modality == "S1":
-
         dataGen = dataGenBigEarthTiff(
             bigEarthDir=root_folder,
             bands10=None,
