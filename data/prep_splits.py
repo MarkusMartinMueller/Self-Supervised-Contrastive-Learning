@@ -3,7 +3,10 @@ import argparse
 import os
 import csv
 import json
-from tensorflow_utils import prep_tf_record_files
+#from tensorflow_utils import prep_tf_record_files
+from pytorch_utils import prep_lmdb_files
+import gdal
+
 
 GDAL_EXISTED = False
 RASTERIO_EXISTED = False
@@ -18,9 +21,7 @@ if __name__ == "__main__":
     parser.add_argument('-r1', '--root_folder_s1', dest='root_folder_s1',
                         help='root folder path contains multiple patch folders')
     parser.add_argument('-r2', '--root_folder_s2', dest="root_folder_s2")
-    parser.add_argument('-o', '--out_folder_s1', dest='out_folder_s1',
-                        help='folder path containing resulting TFRecord or LMDB files')
-    parser.add_argument('-o', '--out_folder_s2', dest='out_folder_s2',
+    parser.add_argument('-o', '--out_folder', dest='out_folder',
                         help='folder path containing resulting TFRecord or LMDB files')
     parser.add_argument('--update_json', default=False, action="store_true", help=
     'flag for adding BigEarthNet-19 labels to the json file of each patch')
@@ -28,7 +29,7 @@ if __name__ == "__main__":
     'csv files each of which contain list of patch names, patches with snow, clouds, and shadows already excluded',
                         nargs='+')
     parser.add_argument('-l', '--library', type=str, dest='library', help="Limit search to Sentinel mission",
-                        choices=['tensorflow'])
+                        choices=['tensorflow', 'pytorch'])
 
     args = parser.parse_args()
 
@@ -106,26 +107,22 @@ if __name__ == "__main__":
         )
     elif args.library == 'pytorch':
 
-        prep_torch_files(
+        prep_lmdb_files(
             args.root_folder_s1,
-            args.out_folder_s1,
+            args.root_folder_s2,
+            args.out_folder,
             "S1",
-            split_names,
             patch_names_list,
-            label_indices,
             GDAL_EXISTED,
-            RASTERIO_EXISTED,
-            UPDATE_JSON
+            RASTERIO_EXISTED
         )
 
-        prep_torch_files(
+        prep_lmdb_files(
             args.root_folder_s2,
-            args.out_folder_s2,
+            args.root_folder_s2,
+            args.out_folder,
             "S2",
-            split_names,
             patch_names_list,
-            label_indices,
             GDAL_EXISTED,
             RASTERIO_EXISTED,
-            UPDATE_JSON
         )
