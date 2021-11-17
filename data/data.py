@@ -175,12 +175,15 @@ class dataGenBigEarthLMDB:
             sample = to_tensor(sample)
             sample['bands20'] = interpolate(sample["bands20"])
 
+
+
             #sample['bands20'] = interp_band(bands20).astype(np.float32)
             #sample = to_tensor(sample)
 
 
 
         elif self.modality == "S1":
+
             vv,vh, multiHots = loads_pyarrow(byteflow)
             sample = {'vv': vv.astype(np.float32), 'vh': vh.astype(np.float32),
                       'label': multiHots.astype(np.float32)}
@@ -188,12 +191,7 @@ class dataGenBigEarthLMDB:
             sample = normalize(sample)
             sample = to_tensor(sample)
 
-
-
-
-
-
-
+        sample = dict_concat(sample)
 
 
         return sample
@@ -225,6 +223,25 @@ def interpolate(bands, img10_shape=[120, 120]):
 
     return torch.squeeze(bands_interpolated,1)
 
+
+def dict_concat(sample: dict):
+    """
+    sample: dict with keys bands10,bands20, label
+
+    :return:
+         concat_dict: dict with keys bands, label
+
+    """
+
+    concat_dict = {}  # dict where bands10 and bands20 or vv and vh are concatenated along there channel dimension, e.g. (4,120,120) and (6,120,120) -> (10,120,120), label stays the same
+    keys = list(sample.keys())
+
+    bands = torch.cat((sample[keys[0]], sample[keys[1]]))
+
+    concat_dict["bands"] = bands
+    concat_dict["label"] = sample[keys[2]]
+
+    return concat_dict
 
 def loads_pyarrow(buf):
     """
