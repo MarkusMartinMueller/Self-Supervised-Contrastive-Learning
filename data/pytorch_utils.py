@@ -191,6 +191,7 @@ def read_scale_raster(file_path, GDAL_EXISTED, RASTERIO_EXISTED):
 
 class dataGenBigEarthTiff:
     def __init__(self, bigEarthDir=None,
+                 labels_folder=None,
                  bands10=None, bands20=None, bands60=None, vv= None, vh = None,
                  patch_names_list=None,
                  RASTERIO_EXISTED=None, GDAL_EXISTED=None
@@ -199,7 +200,7 @@ class dataGenBigEarthTiff:
 
         # patches_names_list  is a list which containes lists of s2 and s1 strings, e.g. S2B_MSIL2A_20171107T105229_83_2 and  S2B_MSIL2A_20171107T105229_S1_83_2
         self.Dir = bigEarthDir
-
+        self.labels_folder = labels_folder
         self.bands10 = bands10
         self.bands20 = bands20
         self.bands60 = bands60
@@ -224,8 +225,13 @@ class dataGenBigEarthTiff:
 
     def __data_generation(self, idx):
 
+
+
         imgNm = self.total_patch[idx]
-        end = imgNm.find("_", 11)  # find the third underscore, to get the right names for read_scale_raster
+
+
+        end = imgNm[0].find("_", 11)  # find the third underscore, to get the right names for read_scale_raster
+
         bands10_array = []
         bands20_array = []
         bands60_array = []
@@ -235,29 +241,29 @@ class dataGenBigEarthTiff:
         if self.bands10 is not None:
             for band in self.bands10:
                 bands10_array.append(
-                    read_scale_raster(os.path.join(self.Dir, imgNm, imgNm + '_B' + band + '.tif'),
+                    read_scale_raster(os.path.join(self.Dir, imgNm[0], imgNm[0] + '_B' + band + '.tif'),
                                       self.GDAL_EXISTED, self.RASTERIO_EXISTED))
 
         if self.bands20 is not None:
             for band in self.bands20:
                 bands20_array.append(
-                    read_scale_raster(os.path.join(self.Dir, imgNm, imgNm + '_B' + band + '.tif'),
+                    read_scale_raster(os.path.join(self.Dir, imgNm[0],imgNm[0] + '_B' + band + '.tif'),
                                       self.GDAL_EXISTED, self.RASTERIO_EXISTED))
 
         if self.bands60 is not None:
             for band in self.bands60:
                 bands60_array.append(
-                    read_scale_raster(os.path.join(self.Dir, imgNm, imgNm + '_B' + band + '.tif'),
+                    read_scale_raster(os.path.join(self.Dir, imgNm[0], imgNm[0] + '_B' + band + '.tif'),
                                       self.GDAL_EXISTED, self.RASTERIO_EXISTED))
 
         if self.vv is not None:
 
             vv_array.append(
-                    read_scale_raster(os.path.join(self.Dir, imgNm, imgNm[:end]+"_S1"+ imgNm[end+3:] + '_VV' + '.tif'),
+                    read_scale_raster(os.path.join(self.Dir, imgNm[0][:end]+"_S1"+ imgNm[0][end:], imgNm[0][:end]+"_S1"+ imgNm[0][end:] + '_VV' + '.tif'),
                                       self.GDAL_EXISTED, self.RASTERIO_EXISTED))
         if self.vh is not None:
             vh_array.append(
-                    read_scale_raster(os.path.join(self.Dir, imgNm, imgNm[:end]+"_S1"+ imgNm[end+3:] + '_VH' + '.tif'),
+                    read_scale_raster(os.path.join(self.Dir, imgNm[0][:end]+"_S1"+ imgNm[0][end:], imgNm[0][:end]+"_S1"+ imgNm[0][end:] + '_VH' + '.tif'),
                                       self.GDAL_EXISTED, self.RASTERIO_EXISTED))
 
         bands10_array = np.asarray(bands10_array).astype(np.float32)
@@ -267,7 +273,7 @@ class dataGenBigEarthTiff:
         vv_array = np.asarray(vv_array).astype(np.float32)
         vh_array = np.asarray(vh_array).astype(np.float32)
 
-        labels = parse_json_labels(os.path.join(self.Dir, imgNm, imgNm + '_labels_metadata.json'))
+        labels = parse_json_labels(os.path.join(self.labels_folder, imgNm[0], imgNm[0] + '_labels_metadata.json'))
         oldMultiHots = cls2multiHot_old(labels)
         oldMultiHots.astype(int)
         newMultiHots = cls2multiHot_new(labels)
@@ -275,22 +281,23 @@ class dataGenBigEarthTiff:
 
         if self.bands10 is not None and self.bands20 is not None and self.bands60 is not None :
             sample = {'bands10': bands10_array, 'bands20': bands20_array, 'bands60': bands60_array,
-                      'patch_name': imgNm, 'multi_hots_n': newMultiHots, 'multi_hots_o': oldMultiHots}
+                      'patch_name': imgNm[0], 'multi_hots_n': newMultiHots, 'multi_hots_o': oldMultiHots}
         elif self.vv is not None and self.vh is not None:
 
             sample = {'vv': vv_array, 'vh': vh_array,
-                      'patch_name': imgNm, 'multi_hots_n': newMultiHots, 'multi_hots_o': oldMultiHots}
+                      'patch_name': imgNm[0][:end]+"_S1"+ imgNm[0][end:], 'multi_hots_n': newMultiHots, 'multi_hots_o': oldMultiHots}
 
         return sample
 
 
-def prep_lmdb_files(root_folder, out_folder,modality,patch_names_list, GDAL_EXISTED, RASTERIO_EXISTED):
+def prep_lmdb_files(root_folder,labels_folder, out_folder,modality, patch_names_list, GDAL_EXISTED, RASTERIO_EXISTED):
     from torch.utils.data import DataLoader
     import lmdb
 
     if modality == "S2":
         dataGen = dataGenBigEarthTiff(
             bigEarthDir=root_folder,
+            labels_folder= labels_folder,
             bands10=['02', '03', '04', '08'],
             bands20=['05', '06', '07', '8A', '11', '12'],
             bands60=['01', '09'],
@@ -306,15 +313,15 @@ def prep_lmdb_files(root_folder, out_folder,modality,patch_names_list, GDAL_EXIS
             dataGen)
         data_loader = DataLoader(dataGen, num_workers=4, collate_fn=lambda x: x)
 
-        db = lmdb.open(os.path.join(out_folder, 'BigEarth__Serbia_Summer_S2.lmdb'), map_size=map_size_)
+        db = lmdb.open(os.path.join(out_folder, 'BigEarth_Serbia_Summer_S2.lmdb'), map_size=map_size_)
 
         txn = db.begin(write=True)
         patch_names = []
         for idx, data in enumerate(data_loader):
-            bands10, bands20, bands60, patch_name, _, multiHots_o = data[0]['bands10'], data[0]['bands20'], data[0][
+            bands10, bands20, bands60, patch_name, multiHots_n, multiHots_o = data[0]['bands10'], data[0]['bands20'], data[0][
                 'bands60'], data[0]['patch_name'], data[0]['multi_hots_n'], data[0]['multi_hots_o']
             # txn.put(u'{}'.format(patch_name).encode('ascii'), dumps_pyarrow((bands10, bands20, bands60, multiHots_n, multiHots_o)))
-            txn.put(u'{}'.format(patch_name).encode('ascii'), dumps_pyarrow((bands10, bands20, bands60, multiHots_o)))
+            txn.put(u'{}'.format(patch_name).encode('ascii'), dumps_pyarrow((bands10, bands20, bands60, multiHots_n)))
             patch_names.append(patch_name)
 
             if idx % 10000 == 0:
@@ -326,6 +333,7 @@ def prep_lmdb_files(root_folder, out_folder,modality,patch_names_list, GDAL_EXIS
     elif modality == "S1":
         dataGen = dataGenBigEarthTiff(
             bigEarthDir=root_folder,
+            labels_folder=labels_folder,
             bands10=None,
             bands20=None,
             bands60=None,
@@ -346,9 +354,9 @@ def prep_lmdb_files(root_folder, out_folder,modality,patch_names_list, GDAL_EXIS
         txn = db.begin(write=True)
         patch_names = []
         for idx, data in enumerate(data_loader):
-            vv,vh, patch_name, _, multiHots_o = data[0]['vv'], data[0]['vh'], data[0]['patch_name'], data[0]['multi_hots_n'], data[0]['multi_hots_o']
+            vv,vh, patch_name, multiHots_n, multiHots_o = data[0]['vv'], data[0]['vh'], data[0]['patch_name'], data[0]['multi_hots_n'], data[0]['multi_hots_o']
             # txn.put(u'{}'.format(patch_name).encode('ascii'), dumps_pyarrow((bands10, bands20, bands60, multiHots_n, multiHots_o)))
-            txn.put(u'{}'.format(patch_name).encode('ascii'), dumps_pyarrow((vv,vh, multiHots_o)))
+            txn.put(u'{}'.format(patch_name).encode('ascii'), dumps_pyarrow((vv,vh, multiHots_n)))
             patch_names.append(patch_name)
 
             if idx % 10000 == 0:
