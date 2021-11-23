@@ -6,7 +6,15 @@
 
 import torch
 import torch.nn as nn
+from torch.utils.data import DataLoader
+
+
+
+#local imports
 from ResNet import ResNet50_S1, ResNet50_S2, ResNet50_joint
+from data.data_one_way import dataGenBigEarthLMDB_joint
+from data.data_two_way import dataGenBigEarthLMDB
+
 
 class TwoBranch(nn.Module):
 
@@ -37,8 +45,8 @@ class TwoBranch(nn.Module):
 
     def forward(self, s_1, s_2, type = "joint"):
         """
-        s_1: torch.tensor, sentinel 1 input
-        s_2: torch.tensor, sentinel 2 input
+        s_1: torch.tensor, sentinel 1 input [batch_size,bands,60,60]
+        s_2: torch.tensor, sentinel 2 input [batch_size,bands,120,120]
         type: string separate or joint
 
         separate: two different models for each modality
@@ -90,8 +98,30 @@ class TwoBranch(nn.Module):
 
 if __name__ == "__main__":
 
-    inputs_s1 = torch.randn((4, 10, 224, 224))
-    inputs_s2 = torch.randn((4, 2, 224, 224))
+
+    train_csv = "C:/Users/Markus/Desktop/splits_mm_serbia/train.csv"
+    val_csv = "C:/Users/Markus/Desktop/splits_mm_serbia/val.csv"
+    test_csv = "C:/Users/Markus/Desktop/splits_mm_serbia/test.csv"
+
+    train_dataGen = dataGenBigEarthLMDB_joint(
+        bigEarthPthLMDB_S2="C:/Users/Markus/Desktop/project/data/BigEarth_Serbia_Summer_S2.lmdb",
+        bigEarthPthLMDB_S1="C:/Users/Markus/Desktop/project/data/BigEarth_Serbia_Summer_S1.lmdb",
+        state='val',
+
+        train_csv=train_csv,
+        val_csv=val_csv,
+        test_csv=test_csv
+    )
+    train_data_loader = DataLoader(train_dataGen, batch_size=4, num_workers=0, shuffle=False, pin_memory=False)
+
+    image = next(iter(train_data_loader))
+
+    #inputs_s1 = torch.randn((4, 10, 224, 224))
+    #inputs_s2 = torch.randn((4, 2, 224, 224))
+
+    inputs_s1 = image["bands_S1"]
+    inputs_s2 = image["bands_S2"]
+
     resnet_s1 = ResNet50_S1()
     resnet_s2 = ResNet50_S2()
     resnet_joint = ResNet50_joint()
