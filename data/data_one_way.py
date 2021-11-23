@@ -112,24 +112,21 @@ class dataGenBigEarthLMDB_joint:
             with open(self.train_bigEarth_csv, 'r') as f:
                 csv_reader = csv.reader(f)
                 for row in csv_reader:
-                    end = row[0].find("_",11)  # find the third underscore,
-                    img = row[0][:end]+"_S1"+ row[0][end:]
-                    self.patch_names.append([row[0],img])
+
+                    self.patch_names.append(row)
 
         elif self.state == 'val':
             with open(self.val_bigEarth_csv, 'r') as f:
                 csv_reader = csv.reader(f)
                 for row in csv_reader:
-                    end = row[0].find("_",11)  # find the third underscore,
-                    img = row[0][:end] + "_S1" + row[0][end:]
-                    self.patch_names.append([row[0],img])
+
+                    self.patch_names.append(row)
         elif self.state == "test":
             with open(self.test_bigEarth_csv, 'r') as f:
                 csv_reader = csv.reader(f)
                 for row in csv_reader:
-                    end = row[0].find("_", 11)  # find the third underscore,
-                    img = row[0][:end] + "_S1" + row[0][end:]
-                    self.patch_names.append([row[0],img])
+
+                    self.patch_names.append(row)
 
     def __len__(self):
 
@@ -285,8 +282,8 @@ class Normalize(object):
 
         elif self.modality == "S1":
             vv, vh, label = sample['vv'], sample['vh'], sample['label']
-            vv_norm= np.empty((1,60,60),np.float32)
-            vh_norm=np.empty((1,60,60),np.float32)
+            vv_norm= np.empty((1,120,120),np.float32)
+            vh_norm=np.empty((1,120,120),np.float32)
 
             for idx, (t, m, s) in enumerate(zip(vv, self.vv_mean, self.vv_std)):
                 vv_norm[idx]= np.divide(np.subtract(t,m),s)

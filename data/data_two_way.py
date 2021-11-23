@@ -98,60 +98,55 @@ class dataGenBigEarthLMDB:
         self.test_bigEarth_csv = test_csv
         self.state = state
         self.patch_names = []
-        if self.modality == "S2":
-            self.readingCSV()
-        elif self.modality == "S1":
-            self.readingCSV_S1()
+        self.readingCSV()
 
     def readingCSV(self):
-        if self.state == 'train':
-            with open(self.train_bigEarth_csv, 'r') as f:
-                csv_reader = csv.reader(f)
-                for row in csv_reader:
-                    self.patch_names.append(row[0])
 
-        elif self.state == 'val':
-            with open(self.val_bigEarth_csv, 'r') as f:
-                csv_reader = csv.reader(f)
-                for row in csv_reader:
-                    self.patch_names.append(row[0])
-        elif self.state == "test":
-            with open(self.test_bigEarth_csv, 'r') as f:
-                csv_reader = csv.reader(f)
-                for row in csv_reader:
-                    self.patch_names.append(row[0])
+        if self.modality == "S2":
+            if self.state == 'train':
+                with open(self.train_bigEarth_csv, 'r') as f:
+                    csv_reader = csv.reader(f)
+                    for row in csv_reader:
+                        self.patch_names.append(row[0])
 
-    def readingCSV_S1(self):
+            elif self.state == 'val':
+                with open(self.val_bigEarth_csv, 'r') as f:
+                    csv_reader = csv.reader(f)
+                    for row in csv_reader:
+                        self.patch_names.append(row[0])
+            elif self.state == "test":
+                with open(self.test_bigEarth_csv, 'r') as f:
+                    csv_reader = csv.reader(f)
+                    for row in csv_reader:
+                        self.patch_names.append(row[0])
+
+        elif self.modality == "S1":
+            if self.state == 'train':
+                with open(self.train_bigEarth_csv, 'r') as f:
+                    csv_reader = csv.reader(f)
+                    for row in csv_reader:
+                        self.patch_names.append(row[1])
+
+            elif self.state == 'val':
+                with open(self.val_bigEarth_csv, 'r') as f:
+                    csv_reader = csv.reader(f)
+                    for row in csv_reader:
+                        self.patch_names.append(row[1])
+            elif self.state == "test":
+                with open(self.test_bigEarth_csv, 'r') as f:
+                    csv_reader = csv.reader(f)
+                    for row in csv_reader:
+                        self.patch_names.append(row[1])
 
 
-        if self.state == 'train':
-            with open(self.train_bigEarth_csv, 'r') as f:
-                csv_reader = csv.reader(f)
-                for row in csv_reader:
-                    end = row[0].find("_",11)  # find the third underscore, to get the right names for read_scale_raster
-                    img = row[0][:end]+"_S1"+ row[0][end:]
-                    self.patch_names.append(img)
 
-        elif self.state == 'val':
-            with open(self.val_bigEarth_csv, 'r') as f:
-                csv_reader = csv.reader(f)
-                for row in csv_reader:
-                    end = row[0].find("_",11)  # find the third underscore, to get the right names for read_scale_raster
-                    img = row[0][:end] + "_S1" + row[0][end:]
-                    self.patch_names.append(img)
-        elif self.state == "test":
-            with open(self.test_bigEarth_csv, 'r') as f:
-                csv_reader = csv.reader(f)
-                for row in csv_reader:
-                    end = row[0].find("_", 11)  # find the third underscore, to get the right names for read_scale_raster
-                    img = row[0][:end] + "_S1" + row[0][end:]
-                    self.patch_names.append(img)
 
     def __len__(self):
 
         return len(self.patch_names)
 
     def __getitem__(self, idx):
+
 
         patch_name = self.patch_names[idx]
 
@@ -286,8 +281,8 @@ class Normalize(object):
 
         elif self.modality == "S1":
             vv, vh, label = sample['vv'], sample['vh'], sample['label']
-            vv_norm= np.empty((1,60,60),np.float32)
-            vh_norm=np.empty((1,60,60),np.float32)
+            vv_norm= np.empty((1,120,120),np.float32)
+            vh_norm=np.empty((1,120,120),np.float32)
 
             for idx, (t, m, s) in enumerate(zip(vv, self.vv_mean, self.vv_std)):
                 vv_norm[idx]= np.divide(np.subtract(t,m),s)
