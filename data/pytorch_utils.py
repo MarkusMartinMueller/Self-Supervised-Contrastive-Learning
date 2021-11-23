@@ -190,6 +190,13 @@ def read_scale_raster(file_path, GDAL_EXISTED, RASTERIO_EXISTED):
     return band_data
 
 class dataGenBigEarthTiff:
+
+    """
+
+    db - later change BigEarth_Serbia_Summer_S2.lmdb in lmdb.open(os.path.join(out_folder, 'BigEarth_Serbia_Summer_S2.lmdb'), map_size=map_size_)
+    to the full BigEarthNet_S2.lmdb
+    """
+
     def __init__(self, bigEarthDir=None,
                  labels_folder=None,
                  bands10=None, bands20=None, bands60=None, vv= None, vh = None,
@@ -255,6 +262,13 @@ class dataGenBigEarthTiff:
                 bands60_array.append(
                     read_scale_raster(os.path.join(self.Dir, imgNm[0], imgNm[0] + '_B' + band + '.tif'),
                                       self.GDAL_EXISTED, self.RASTERIO_EXISTED))
+
+        """
+                 the csv files in the current directory have different names than S1 Files 
+
+                
+                An adjustment happens via imgNm[0][:end]+"_S1"+ imgNm[0][end:]
+        """
 
         if self.vv is not None:
 
