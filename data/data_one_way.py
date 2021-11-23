@@ -81,68 +81,55 @@ bands_std = {
 
 
 
-class dataGenBigEarthLMDB:
+class dataGenBigEarthLMDB_joint:
 
-    def __init__(self,bigEarthPthLMDB ,  state='train',modality =None,
+    def __init__(self,bigEarthPthLMDB_S2, bigEarthPthLMDB_S1,  state='train',
                  train_csv=None, val_csv=None, test_csv=None):
 
-        self.env = lmdb.open(bigEarthPthLMDB, readonly=True, lock=False, readahead=False, meminit=False)
+        self.env2 = lmdb.open(bigEarthPthLMDB_S2, readonly=True, lock=False, readahead=False, meminit=False)
+        self.env1 = lmdb.open(bigEarthPthLMDB_S1, readonly=True, lock=False, readahead=False, meminit=False)
 
-
-        self.modality = modality
+        self.modality = None
         self.train_bigEarth_csv = train_csv
         self.val_bigEarth_csv = val_csv
         self.test_bigEarth_csv = test_csv
         self.state = state
         self.patch_names = []
-        if self.modality == "S2":
-            self.readingCSV()
-        elif self.modality == "S1":
-            self.readingCSV_S1()
+        self.readingCSV()
+
+
 
     def readingCSV(self):
-        if self.state == 'train':
-            with open(self.train_bigEarth_csv, 'r') as f:
-                csv_reader = csv.reader(f)
-                for row in csv_reader:
-                    self.patch_names.append(row[0])
+        """
+        this function reads the csv files, but S1 Files have different names than the names in
+        the csv
 
-        elif self.state == 'val':
-            with open(self.val_bigEarth_csv, 'r') as f:
-                csv_reader = csv.reader(f)
-                for row in csv_reader:
-                    self.patch_names.append(row[0])
-        elif self.state == "test":
-            with open(self.test_bigEarth_csv, 'r') as f:
-                csv_reader = csv.reader(f)
-                for row in csv_reader:
-                    self.patch_names.append(row[0])
-
-    def readingCSV_S1(self):
-
+        row[0] contains the Sentinel 2 image name as a string
+        An adjustment happens via end and img with string concatenation
+        """
 
         if self.state == 'train':
             with open(self.train_bigEarth_csv, 'r') as f:
                 csv_reader = csv.reader(f)
                 for row in csv_reader:
-                    end = row[0].find("_",11)  # find the third underscore, to get the right names for read_scale_raster
+                    end = row[0].find("_",11)  # find the third underscore,
                     img = row[0][:end]+"_S1"+ row[0][end:]
-                    self.patch_names.append(img)
+                    self.patch_names.append([row[0],img])
 
         elif self.state == 'val':
             with open(self.val_bigEarth_csv, 'r') as f:
                 csv_reader = csv.reader(f)
                 for row in csv_reader:
-                    end = row[0].find("_",11)  # find the third underscore, to get the right names for read_scale_raster
+                    end = row[0].find("_",11)  # find the third underscore,
                     img = row[0][:end] + "_S1" + row[0][end:]
-                    self.patch_names.append(img)
+                    self.patch_names.append([row[0],img])
         elif self.state == "test":
             with open(self.test_bigEarth_csv, 'r') as f:
                 csv_reader = csv.reader(f)
                 for row in csv_reader:
-                    end = row[0].find("_", 11)  # find the third underscore, to get the right names for read_scale_raster
+                    end = row[0].find("_", 11)  # find the third underscore,
                     img = row[0][:end] + "_S1" + row[0][end:]
-                    self.patch_names.append(img)
+                    self.patch_names.append([row[0],img])
 
     def __len__(self):
 
@@ -158,40 +145,49 @@ class dataGenBigEarthLMDB:
 
 
     def _getDataUp(self, patch_name, idx):
-        normalize = Normalize(bands_mean,bands_std,self.modality)
-        to_tensor = transforms.Compose([ToTensor(self.modality)])
+        normalize_S2 = Normalize(bands_mean,bands_std,modality =  "S2")
+        normalize_S1 = Normalize(bands_mean, bands_std, modality="S1")
+
+        to_tensor_S2 = transforms.Compose([ToTensor(modality=  "S2")])
+        to_tensor_S1 = transforms.Compose([ToTensor(modality=  "S1")])
 
 
-        with self.env.begin(write=False) as txn:
-            byteflow = txn.get(patch_name.encode())
+        with self.env2.begin(write=False) as txn:
+            byteflow_S2 = txn.get(patch_name[0].encode())
 
-        if self.modality == "S2":
-            bands10, bands20, _, multiHots = loads_pyarrow(byteflow)
-
-            sample = {'bands10': bands10.astype(np.float32), 'bands20': bands20.astype(np.float32),
-                      'label': multiHots.astype(np.float32)}
-
-            sample = normalize(sample)
-            sample = to_tensor(sample)
-            sample['bands20'] = interpolate(sample["bands20"])
+        with self.env1.begin(write=False) as txn:
+            byteflow_S1 = txn.get(patch_name[1].encode())
 
 
 
-            #sample['bands20'] = interp_band(bands20).astype(np.float32)
-            #sample = to_tensor(sample)
+        # Load S2 bytflow and create upsampled S2 dictionary
+        bands10, bands20, _, multiHots = loads_pyarrow(byteflow_S2)
+
+        sample_S2 = {'bands10': bands10.astype(np.float32), 'bands20': bands20.astype(np.float32),
+                  'label': multiHots.astype(np.float32)}
+
+        sample_S2 = normalize_S2(sample_S2)
+        sample_S2 = to_tensor_S2(sample_S2)
+        sample_S2['bands20'] = interpolate(sample_S2["bands20"])
 
 
 
-        elif self.modality == "S1":
+        #sample['bands20'] = interp_band(bands20).astype(np.float32)
+        #sample = to_tensor(sample)
 
-            vv,vh, multiHots = loads_pyarrow(byteflow)
-            sample = {'vv': vv.astype(np.float32), 'vh': vh.astype(np.float32),
-                      'label': multiHots.astype(np.float32)}
 
-            sample = normalize(sample)
-            sample = to_tensor(sample)
 
-        sample = dict_concat(sample)
+
+
+        vv,vh, multiHots = loads_pyarrow(byteflow_S1)
+        sample_S1  = {'vv': vv.astype(np.float32), 'vh': vh.astype(np.float32),
+                  'label': multiHots.astype(np.float32)}
+
+        sample_S1 = normalize_S1(sample_S1)
+        sample_S1 = to_tensor_S1(sample_S1)
+
+
+        sample = dict_concat(sample_S1,sample_S2)
 
 
         return sample
@@ -224,7 +220,7 @@ def interpolate(bands, img10_shape=[120, 120]):
     return torch.squeeze(bands_interpolated,1)
 
 
-def dict_concat(sample: dict):
+def dict_concat(sample_S1: dict, sample_S2: dict) -> dict:
     """
     sample: dict with keys bands10,bands20, label
 
@@ -233,13 +229,16 @@ def dict_concat(sample: dict):
 
     """
 
-    concat_dict = {}  # dict where bands10 and bands20 or vv and vh are concatenated along there channel dimension, e.g. (4,120,120) and (6,120,120) -> (10,120,120), label stays the same
-    keys = list(sample.keys())
+    concat_dict = {}  # dict where bands10 and bands20 and vv and vh are concatenated along there channel dimension, e.g. (4,120,120) and (6,120,120) -> (10,120,120), label stays the same
+    keys_S1 = list(sample_S1.keys())
+    keys_S2 = list(sample_S2.keys())
 
-    bands = torch.cat((sample[keys[0]], sample[keys[1]]))
+    bands_S2 = torch.cat((sample_S2[keys_S2[0]], sample_S2[keys_S2[1]]))
+    bands_S1 = torch.cat((sample_S1[keys_S1[0]], sample_S1[keys_S1[1]]))
 
-    concat_dict["bands"] = bands
-    concat_dict["label"] = sample[keys[2]]
+    concat_dict["bands_S2"] = bands_S2
+    concat_dict["bands_S1"] = bands_S1
+    concat_dict["label"] = sample_S2[keys_S2[2]]
 
     return concat_dict
 
@@ -272,24 +271,30 @@ class Normalize(object):
 
         if self.modality == "S2":
             band10, band20, label = sample['bands10'], sample['bands20'], sample['label']
+            band10_norm = np.empty((4,120,120),np.float32)
+            band20_norm = np.empty((6, 60, 60), np.float32)
 
-            for t, m, s in zip(band10, self.bands10_mean, self.bands10_std):
-                np.divide(np.subtract(t,m),s)
 
-            for t, m, s in zip(band20, self.bands20_mean, self.bands20_std):
-                np.divide(np.subtract(t,m),s)
+            for idx, (t, m, s)in enumerate(zip(band10, self.bands10_mean, self.bands10_std)):
+               band10_norm[idx] = np.divide(np.subtract(t,m),s)
 
-            return {'bands10': band10, 'bands20': band20, 'label': label}
+            for idx, (t, m, s) in enumerate(zip(band20, self.bands20_mean, self.bands20_std)):
+               band20_norm[idx]= np.divide(np.subtract(t,m),s)
+
+            return {'bands10': band10_norm, 'bands20': band20_norm, 'label': label}
 
         elif self.modality == "S1":
             vv, vh, label = sample['vv'], sample['vh'], sample['label']
+            vv_norm= np.empty((1,60,60),np.float32)
+            vh_norm=np.empty((1,60,60),np.float32)
 
-            for t, m, s in zip(vv, self.vv_mean, self.vv_std):
-                np.divide(np.subtract(t,m),s)
+            for idx, (t, m, s) in enumerate(zip(vv, self.vv_mean, self.vv_std)):
+                vv_norm[idx]= np.divide(np.subtract(t,m),s)
 
-            for t, m, s in zip(vh, self.vh_mean, self.vh_std):
-                np.divide(np.subtract(t,m),s)
-            return {'vv': vv, 'vh': vh, 'label': label}
+            for idx, (t, m, s) in enumerate(zip(vh, self.vh_mean, self.vh_std)):
+                vh_norm[idx]=np.divide(np.subtract(t,m),s)
+
+            return {'vv': vv_norm, 'vh': vh_norm, 'label': label}
 
 
 class ToTensor(object):
