@@ -82,6 +82,9 @@ bands_std = {
 
 
 class dataGenBigEarthLMDB:
+    """
+        With this class you can generate data for one modality, e.g. S1
+    """
 
     def __init__(self,bigEarthPthLMDB ,  state='train',modality =None,
                  train_csv=None, val_csv=None, test_csv=None):
@@ -158,6 +161,7 @@ class dataGenBigEarthLMDB:
 
 
     def _getDataUp(self, patch_name, idx):
+
         normalize = Normalize(bands_mean,bands_std,self.modality)
         to_tensor = transforms.Compose([ToTensor(self.modality)])
 
@@ -219,7 +223,7 @@ def interpolate(bands, img10_shape=[120, 120]):
 
     bands_interpolated= torch.nn.functional.interpolate(bands, [120, 120], mode="bicubic")
 
-    return torch.squeeze(bands_interpolated,1)
+    return torch.squeeze(bands_interpolated,1) # squeeze to be three dim again (number_bands,120,120)
 
 
 def dict_concat(sample: dict):
@@ -229,7 +233,7 @@ def dict_concat(sample: dict):
          concat_dict: dict with keys bands, label
     """
 
-    concat_dict = {}  # dict where bands10 and bands20 or vv and vh are concatenated along there channel dimension, e.g. (4,120,120) and (6,120,120) -> (10,120,120), label stays the same
+    concat_dict = {}  # dict where bands10 and bands20 or vv and vh are concatenated along there channel dimension, e.g. (4,120,120) and (6,120,120) -> (10,120,120), label vector stays the same
     keys = list(sample.keys())
 
     bands = torch.cat((sample[keys[0]], sample[keys[1]]))
@@ -268,24 +272,30 @@ class Normalize(object):
 
         if self.modality == "S2":
             band10, band20, label = sample['bands10'], sample['bands20'], sample['label']
+            band10_norm = np.empty((4,120,120),np.float32)
+            band20_norm = np.empty((6, 60, 60), np.float32)
 
-            for t, m, s in zip(band10, self.bands10_mean, self.bands10_std):
-                np.divide(np.subtract(t,m),s)
 
-            for t, m, s in zip(band20, self.bands20_mean, self.bands20_std):
-                np.divide(np.subtract(t,m),s)
+            for idx, (t, m, s)in enumerate(zip(band10, self.bands10_mean, self.bands10_std)):
+               band10_norm[idx] = np.divide(np.subtract(t,m),s)
 
-            return {'bands10': band10, 'bands20': band20, 'label': label}
+            for idx, (t, m, s) in enumerate(zip(band20, self.bands20_mean, self.bands20_std)):
+               band20_norm[idx]= np.divide(np.subtract(t,m),s)
+
+            return {'bands10': band10_norm, 'bands20': band20_norm, 'label': label}
 
         elif self.modality == "S1":
             vv, vh, label = sample['vv'], sample['vh'], sample['label']
+            vv_norm= np.empty((1,60,60),np.float32)
+            vh_norm=np.empty((1,60,60),np.float32)
 
-            for t, m, s in zip(vv, self.vv_mean, self.vv_std):
-                np.divide(np.subtract(t,m),s)
+            for idx, (t, m, s) in enumerate(zip(vv, self.vv_mean, self.vv_std)):
+                vv_norm[idx]= np.divide(np.subtract(t,m),s)
 
-            for t, m, s in zip(vh, self.vh_mean, self.vh_std):
-                np.divide(np.subtract(t,m),s)
-            return {'vv': vv, 'vh': vh, 'label': label}
+            for idx, (t, m, s) in enumerate(zip(vh, self.vh_mean, self.vh_std)):
+                vh_norm[idx]=np.divide(np.subtract(t,m),s)
+
+            return {'vv': vv_norm, 'vh': vh_norm, 'label': label}
 
 
 class ToTensor(object):
