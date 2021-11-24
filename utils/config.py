@@ -43,3 +43,7 @@ def parse_config(filename):
     else:
         raise ValueError(
             f'The specified config file "{filename}" does not exist.')
+
+if __name__ == "__main__":
+
+    print(parse_config("C:/Users/Markus/Desktop/project/config/args.yaml"))
