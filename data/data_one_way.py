@@ -235,7 +235,7 @@ def dict_concat(sample_S1: dict, sample_S2: dict) -> dict:
 
     concat_dict["bands_S2"] = bands_S2
     concat_dict["bands_S1"] = bands_S1
-    concat_dict["label"] = sample_S2[keys_S2[2]]
+    concat_dict["labels"] = sample_S2[keys_S2[2]]
 
     return concat_dict
 
