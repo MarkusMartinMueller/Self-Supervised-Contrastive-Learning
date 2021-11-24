@@ -15,6 +15,7 @@ from ResNet import ResNet50_S1, ResNet50_S2, ResNet50_joint
 from data.data_one_way import dataGenBigEarthLMDB_joint
 from data.data_two_way import dataGenBigEarthLMDB
 from utils.fusion import fusion_concat,fusion_avg,fusion_sum,fusion_max
+from loss.classification_loss import ClassificationLoss
 
 
 class TwoBranch(nn.Module):
@@ -35,10 +36,13 @@ class TwoBranch(nn.Module):
         # add mlp projection head
 
         self.projection_head_s1 = nn.Sequential(
-                                             nn.Linear(self.n_features, projection_dim)
+                                                nn.Linear(self.n_features, n_features),
+                                                nn.ReLU(),
+                                                nn.Linear(self.n_features, projection_dim)
                                                 )
 
-        self.projection_head_s2 = nn.Sequential(
+        self.projection_head_s2 = nn.Sequential(nn.Linear(self.n_features, n_features),
+                                                nn.ReLU(),
                                                 nn.Linear(self.n_features, projection_dim)
 
                                                 )
@@ -125,15 +129,33 @@ if __name__ == "__main__":
     resnet_s1 = ResNet50_S1()
     resnet_s2 = ResNet50_S2()
     resnet_joint = ResNet50_joint()
-    net = TwoBranch(resnet_s2, resnet_s1, resnet_joint, n_features=2048, projection_dim=128,type= "joint")
+    net = TwoBranch(resnet_s2, resnet_s1, resnet_joint, n_features=2048, projection_dim=128,type= "separate")
 
     h_i, h_j, projection_i, projection_j = net(inputs_s2, inputs_s1)
+
+    cls = ClassificationLoss(projection_dim=128, n_classes=19)
+
+    labels = image["labels"]
+
+
+    #loss_concat = cls(fusion_concat(projection_i, projection_j),labels)
+    loss_avg = cls(fusion_avg(projection_i, projection_j),labels)
+    loss_sum = cls(fusion_sum(projection_i, projection_j),labels)
+    loss_max = cls (fusion_max(projection_i, projection_j),labels)
+
+
     print(h_i.shape, h_j.shape, projection_i.shape, projection_j.shape)
 
     print(fusion_concat(projection_i, projection_j).shape)
     print(fusion_avg(projection_i, projection_j).shape)
     print(fusion_sum(projection_i, projection_j).shape)
     print(fusion_max(projection_i, projection_j).shape)
+
+
+    #print(loss_concat)
+    print(loss_avg)
+    print(loss_sum)
+    print(loss_max)
 
 
 
