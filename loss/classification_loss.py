@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torchvision
-from utils.fusion import avg, sum, max, concat
+from utils.fusion import fusion_concat,fusion_avg,fusion_sum,fusion_max
 
 class ClassificationLoss(nn.Module):
     """
@@ -9,6 +9,11 @@ class ClassificationLoss(nn.Module):
     """
     def __init__(self, projection_dim, n_classes):
         super(ClassificationLoss, self).__init__()
+
+        """
+        
+        projection_dim needs to be adjusted for fusion_concat because the dimensions is doubled
+        """
         self.projection_dim = projection_dim
         self.n_classes = n_classes
 
@@ -35,7 +40,7 @@ if __name__ == "__main__":
     t = torch.Tensor([0.5])  # threshold
     labels = (labels > t).float() * 1
 
-    fused = avg(inputs_s1, inputs_s2)
+    fused = fusion_avg(inputs_s1, inputs_s2)
 
     loss = cls(fused, labels)
 
