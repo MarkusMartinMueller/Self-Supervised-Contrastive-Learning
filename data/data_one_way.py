@@ -282,14 +282,14 @@ class Normalize(object):
 
         elif self.modality == "S1":
             vv, vh, label = sample['vv'], sample['vh'], sample['label']
-            vv_norm= np.empty((1,120,120),np.float32)
-            vh_norm=np.empty((1,120,120),np.float32)
+            vv_norm= np.zeros((1,120,120),np.float32)
+            vh_norm=np.zeros((1,120,120),np.float32)
 
             for idx, (t, m, s) in enumerate(zip(vv, self.vv_mean, self.vv_std)):
-                vv_norm[idx]= np.divide(np.subtract(t,m),s)
+                vv_norm[idx]= (t-m)/s
 
             for idx, (t, m, s) in enumerate(zip(vh, self.vh_mean, self.vh_std)):
-                vh_norm[idx]=np.divide(np.subtract(t,m),s)
+                vh_norm[idx]=(t-m)/s
 
             return {'vv': vv_norm, 'vh': vh_norm, 'label': label}
 
