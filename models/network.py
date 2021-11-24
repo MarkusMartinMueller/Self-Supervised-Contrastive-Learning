@@ -14,11 +14,12 @@ from torch.utils.data import DataLoader
 from ResNet import ResNet50_S1, ResNet50_S2, ResNet50_joint
 from data.data_one_way import dataGenBigEarthLMDB_joint
 from data.data_two_way import dataGenBigEarthLMDB
+from utils.fusion import fusion_concat,fusion_avg,fusion_sum,fusion_max
 
 
 class TwoBranch(nn.Module):
 
-    def __init__(self, encoder_s1, encoder_s2, encoder_joint, projection_dim, n_features):
+    def __init__(self, encoder_s1, encoder_s2, encoder_joint, projection_dim, n_features,type):
         super(TwoBranch, self).__init__()
         """
         As encoder the commonly used ResNet50 is adopted to obtain hi = f(xi)
@@ -29,21 +30,20 @@ class TwoBranch(nn.Module):
         self.encoder_s2 = encoder_s2
         self.encoder_joint = encoder_joint
         self.n_features = n_features
+        self.type = type
 
         # add mlp projection head
 
-        self.projection_head_s1 = nn.Sequential(nn.Linear(self.n_features, self.n_features, bias=False),
-                                             nn.ReLU(),
+        self.projection_head_s1 = nn.Sequential(
                                              nn.Linear(self.n_features, projection_dim)
                                                 )
 
-        self.projection_head_s2 = nn.Sequential(nn.Linear(self.n_features, self.n_features, bias=False),
-                                                nn.ReLU(),
+        self.projection_head_s2 = nn.Sequential(
                                                 nn.Linear(self.n_features, projection_dim)
 
                                                 )
 
-    def forward(self, s_1, s_2, type = "joint"):
+    def forward(self, s_1, s_2):
         """
         s_1: torch.tensor, sentinel 1 input [batch_size,bands,60,60]
         s_2: torch.tensor, sentinel 2 input [batch_size,bands,120,120]
@@ -54,9 +54,9 @@ class TwoBranch(nn.Module):
 
         """
 
-        if type == "separate":
+        if self.type == "separate":
             return self.forward_separate(s_1, s_2)
-        if type == "joint":
+        if self.type == "joint":
             return self.forward_joint(s_1, s_2)
 
 
@@ -125,10 +125,15 @@ if __name__ == "__main__":
     resnet_s1 = ResNet50_S1()
     resnet_s2 = ResNet50_S2()
     resnet_joint = ResNet50_joint()
-    net = TwoBranch(resnet_s2, resnet_s1, resnet_joint, n_features=2048, projection_dim=128)
+    net = TwoBranch(resnet_s2, resnet_s1, resnet_joint, n_features=2048, projection_dim=128,type= "joint")
 
     h_i, h_j, projection_i, projection_j = net(inputs_s2, inputs_s1)
     print(h_i.shape, h_j.shape, projection_i.shape, projection_j.shape)
+
+    print(fusion_concat(projection_i, projection_j).shape)
+    print(fusion_avg(projection_i, projection_j).shape)
+    print(fusion_sum(projection_i, projection_j).shape)
+    print(fusion_max(projection_i, projection_j).shape)
 
 
 
