@@ -2,7 +2,7 @@ import torch
 import numpy as np
 
 
-def concat(z_i: torch.tensor,z_j:torch.tensor) -> torch.tensor:
+def fusion_concat(z_i: torch.tensor,z_j:torch.tensor) -> torch.tensor:
     """
 
     :param z_i: torch.tensor output from the mpl projection head, shape should be [batch_size,projection_dim]
@@ -18,7 +18,7 @@ def concat(z_i: torch.tensor,z_j:torch.tensor) -> torch.tensor:
 
 
 
-def avg(z_i: torch.tensor,z_j:torch.tensor) -> torch.tensor:
+def fusion_avg(z_i: torch.tensor,z_j:torch.tensor) -> torch.tensor:
     """
 
     :param z_i: torch.tensor output from the mpl projection head, shape should be [batch_size,projection_dim]
@@ -33,7 +33,7 @@ def avg(z_i: torch.tensor,z_j:torch.tensor) -> torch.tensor:
 
     return torch.add(z_i, z_j)
 
-def sum(z_i: torch.tensor,z_j:torch.tensor) -> torch.tensor:
+def fusion_sum(z_i: torch.tensor,z_j:torch.tensor) -> torch.tensor:
     """
 
     :param z_i: torch.tensor output from the mpl projection head, shape should be [batch_size,projection_dim]
@@ -48,7 +48,7 @@ def sum(z_i: torch.tensor,z_j:torch.tensor) -> torch.tensor:
 
     return torch.add(z_i, z_j)
 
-def max(z_i: torch.tensor,z_j:torch.tensor) -> torch.tensor:
+def fusion_max(z_i: torch.tensor,z_j:torch.tensor) -> torch.tensor:
     """
 
     :param z_i: torch.tensor output from the mpl projection head, shape should be [batch_size,projection_dim]
@@ -69,7 +69,7 @@ if __name__ == "__main__":
     inputs_s1 = torch.randn((4, 128))
     inputs_s2 = torch.randn((4, 128))
 
-    print(concat(inputs_s1, inputs_s2).shape)
-    print(avg(inputs_s2, inputs_s1).shape)
-    print(sum(inputs_s2, inputs_s1).shape)
-    print(max(inputs_s2, inputs_s1).shape)
+    print(fusion_concat(inputs_s1, inputs_s2).shape)
+    print(fusion_avg(inputs_s2, inputs_s1).shape)
+    print(fusion_sum(inputs_s2, inputs_s1).shape)
+    print(fusion_max(inputs_s2, inputs_s1).shape)
