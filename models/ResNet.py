@@ -125,7 +125,7 @@ class ResNet50_joint(nn.Module):
 
 
 
-        conv1 = Conv1(input_channels,out_channels =32)
+        conv1 = Conv1(input_channels,out_channels =self.out_channels)
 
 
         x = conv1(x)   # 1x1 convolution to adjust channel size
