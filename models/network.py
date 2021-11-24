@@ -96,9 +96,13 @@ class TwoBranch(nn.Module):
 
 
 
+def get_model(path_type,n_features,projection_dim,out_channels):
+    resnet_s1 = ResNet50_S1()
+    resnet_s2 = ResNet50_S2()
+    resnet_joint = ResNet50_joint(out_channels=out_channels)
+    net = TwoBranch(resnet_s2, resnet_s1, resnet_joint, n_features=n_features, projection_dim=projection_dim, type=path_type)
 
-
-
+    return net
 
 if __name__ == "__main__":
 
@@ -116,7 +120,7 @@ if __name__ == "__main__":
         val_csv=val_csv,
         test_csv=test_csv
     )
-    train_data_loader = DataLoader(train_dataGen, batch_size=4, num_workers=0, shuffle=False, pin_memory=False)
+    train_data_loader = DataLoader(train_dataGen, batch_size=64, num_workers=0, shuffle=False, pin_memory=False)
 
     image = next(iter(train_data_loader))
 
@@ -126,10 +130,9 @@ if __name__ == "__main__":
     inputs_s1 = image["bands_S1"]
     inputs_s2 = image["bands_S2"]
 
-    resnet_s1 = ResNet50_S1()
-    resnet_s2 = ResNet50_S2()
-    resnet_joint = ResNet50_joint()
-    net = TwoBranch(resnet_s2, resnet_s1, resnet_joint, n_features=2048, projection_dim=128,type= "separate")
+
+
+    net = get_model(path_type = "joint",n_features=2048, projection_dim= 128,out_channels=32)
 
     h_i, h_j, projection_i, projection_j = net(inputs_s2, inputs_s1)
 
