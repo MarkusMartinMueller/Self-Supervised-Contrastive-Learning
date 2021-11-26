@@ -268,8 +268,8 @@ class Normalize(object):
 
         if self.modality == "S2":
             band10, band20, label = sample['bands10'], sample['bands20'], sample['label']
-            band10_norm = np.empty((4,120,120),np.float32)
-            band20_norm = np.empty((6, 60, 60), np.float32)
+            band10_norm = np.zeros((4,120,120),np.float32)
+            band20_norm = np.zeros((6, 60, 60), np.float32)
 
 
             for idx, (t, m, s)in enumerate(zip(band10, self.bands10_mean, self.bands10_std)):
