@@ -205,7 +205,7 @@ class dataGenBigEarthTiff:
                  ):
 
 
-        # patches_names_list  is a list which containes lists of s2 and s1 strings, e.g. S2B_MSIL2A_20171107T105229_83_2 and  S2B_MSIL2A_20171107T105229_S1_83_2
+        # patches_names_list  is a list which containes lists of s2 and s1 strings, e.g. S2B_MSIL2A_20171107T105229_83_2 and  (S2B_MSIL2A_20171107T105229_S1_83_2) changing that to actual s1 name
         self.Dir = bigEarthDir
         self.labels_folder = labels_folder
         self.bands10 = bands10
@@ -237,7 +237,7 @@ class dataGenBigEarthTiff:
         imgNm = self.total_patch[idx]
 
 
-        end = imgNm[0].find("_", 11)  # find the third underscore, to get the right names for read_scale_raster
+
 
         bands10_array = []
         bands20_array = []
@@ -271,14 +271,13 @@ class dataGenBigEarthTiff:
         """
 
         if self.vv is not None:
-
             vv_array.append(
-                    read_scale_raster(os.path.join(self.Dir, imgNm[0][:end]+"_S1"+ imgNm[0][end:], imgNm[0][:end]+"_S1"+ imgNm[0][end:] + '_VV' + '.tif'),
-                                      self.GDAL_EXISTED, self.RASTERIO_EXISTED))
+                read_scale_raster(os.path.join(self.Dir, imgNm[1], imgNm[1] + '_VV' + '.tif'),
+                                  self.GDAL_EXISTED, self.RASTERIO_EXISTED))
         if self.vh is not None:
             vh_array.append(
-                    read_scale_raster(os.path.join(self.Dir, imgNm[0][:end]+"_S1"+ imgNm[0][end:], imgNm[0][:end]+"_S1"+ imgNm[0][end:] + '_VH' + '.tif'),
-                                      self.GDAL_EXISTED, self.RASTERIO_EXISTED))
+                read_scale_raster(os.path.join(self.Dir, imgNm[1], imgNm[1] + '_VH' + '.tif'),
+                                  self.GDAL_EXISTED, self.RASTERIO_EXISTED))
 
         bands10_array = np.asarray(bands10_array).astype(np.float32)
         bands20_array = np.asarray(bands20_array).astype(np.float32)

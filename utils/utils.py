@@ -5,13 +5,16 @@ import os
 import json
 import yaml
 
-def save_checkpoint(state, is_best, name):
+def save_checkpoint(state,checkpoint_dir, is_best):
 
-    filename = os.path.join(checkpoint_dir, name + '_checkpoint.pth.tar')
+    filename = os.path.join(checkpoint_dir + '_checkpoint.pth.tar')
 
     torch.save(state, filename)
+    print("Saved PyTorch Model State to model.pth")
     if is_best:
-        shutil.copyfile(filename, os.path.join(checkpoint_dir, name + '_model_best.pth.tar'))
+        shutil.copyfile(filename, os.path.join(checkpoint_dir + '_model_best.pth.tar'))
+        print('New best model saved!')
+
 
 class MetricTracker(object):
     """Computes and stores the average and current value"""

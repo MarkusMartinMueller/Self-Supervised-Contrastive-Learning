@@ -1,1 +1,1 @@
-from.data import dataGenBigEarthLMDB
+from.data_two_way import dataGenBigEarthLMDB
