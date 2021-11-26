@@ -10,11 +10,11 @@ from loss.classification_loss import ClassificationLoss
 
 
 
-def get_loss_func(name,config):
+def get_loss_func(name,projection_dim):
 
     if name == "classification":
 
-        cls = ClassificationLoss(projection_dim=config["projection_dim"], n_classes=19)
+        cls = ClassificationLoss(projection_dim, n_classes=19)
 
         return cls
 
