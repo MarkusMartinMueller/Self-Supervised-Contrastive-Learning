@@ -49,7 +49,7 @@ class TwoBranch(nn.Module):
 
     def forward(self, s_1, s_2):
         """
-        s_1: torch.tensor, sentinel 1 input [batch_size,bands,60,60]
+        s_1: torch.tensor, sentinel 1 input [batch_size,bands,120,120]
         s_2: torch.tensor, sentinel 2 input [batch_size,bands,120,120]
         type: string separate or joint
 
@@ -134,7 +134,7 @@ if __name__ == "__main__":
 
     net = get_model(path_type = "joint",n_features=2048, projection_dim= 128,out_channels=32)
 
-    h_i, h_j, projection_i, projection_j = net(inputs_s2, inputs_s1)
+    h_i, h_j, projection_i, projection_j = net(inputs_s1, inputs_s2)
 
     cls = ClassificationLoss(projection_dim=128, n_classes=19)
 
