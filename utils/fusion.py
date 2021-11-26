@@ -63,6 +63,20 @@ def fusion_max(z_i: torch.tensor,z_j:torch.tensor) -> torch.tensor:
 
     return torch.maximum(z_i, z_j)
 
+
+def get_fusion(name,z_i,z_j):
+    if name == "concat":
+        return fusion_concat(z_i,z_j)
+    elif name == "avg":
+        return fusion_avg(z_i, z_j)
+    elif name == "sum":
+        return fusion_sum(z_i, z_j)
+    elif name == "max":
+        return fusion_max(z_i, z_j)
+    else:
+        raise ValueError('Invalid fusion techniques')
+
+
 if __name__ == "__main__":
 
 
