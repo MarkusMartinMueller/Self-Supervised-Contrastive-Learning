@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader
 
 
 #local imports
-from ResNet import ResNet50_S1, ResNet50_S2, ResNet50_joint
+from models.ResNet import ResNet50_S1, ResNet50_S2, ResNet50_joint
 from data.data_one_way import dataGenBigEarthLMDB_joint
 from data.data_two_way import dataGenBigEarthLMDB
 from utils.fusion import fusion_concat,fusion_avg,fusion_sum,fusion_max
@@ -139,6 +139,8 @@ if __name__ == "__main__":
     cls = ClassificationLoss(projection_dim=128, n_classes=19)
 
     labels = image["labels"]
+    from utils.utils import MetricTracker
+    loss_tracker = MetricTracker()
 
 
     #loss_concat = cls(fusion_concat(projection_i, projection_j),labels)
@@ -146,7 +148,10 @@ if __name__ == "__main__":
     loss_sum = cls(fusion_sum(projection_i, projection_j),labels)
     loss_max = cls (fusion_max(projection_i, projection_j),labels)
 
-
+    loss_tracker.update(loss_avg.item())
+    print('Train Loss: {:.6f}'.format(
+        loss_tracker.avg
+    ))
     print(h_i.shape, h_j.shape, projection_i.shape, projection_j.shape)
 
     print(fusion_concat(projection_i, projection_j).shape)
