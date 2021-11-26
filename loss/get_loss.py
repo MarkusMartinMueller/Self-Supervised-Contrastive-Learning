@@ -1,9 +1,13 @@
 import torch
 import torch.nn as nn
 import torchvision
-from utils.fusion import fusion_concat,fusion_avg,fusion_sum,fusion_max
+
 import math
 from torch.nn import functional as F
+
+
+from loss.classification_loss import ClassificationLoss
+
 
 
 def get_loss_func(name,config):
@@ -18,4 +22,4 @@ def get_loss_func(name,config):
         pass
 
     else:
-        raise ValueError('Invalid optimizer.')
+        raise ValueError('Invalid Loss function.')
