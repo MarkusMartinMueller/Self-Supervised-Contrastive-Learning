@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 import torch
 from tqdm import tqdm
@@ -6,40 +8,135 @@ from datetime import datetime
 from tensorboardX import SummaryWriter
 import os
 
-
+#local imports
 
 
 ##local imports
 
-from utils.config import parse_config
+from models.network import  TwoBranch, get_model
+from data.data_one_way import dataGenBigEarthLMDB_joint
+from loss.get_loss import get_loss_func
+
+from utils.fusion import get_fusion
+from utils.utils import parse_config
 from utils.utils import MetricTracker
+from utils.utils import save_params
+from utils.scheduler import get_scheduler
+from utils.optimizer import get_optimizer
+from utils.utils import  save_checkpoint
+
+def main(filename):
+
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    print("Using {} device".format(device))
+
+    config = parse_config(filename)
+
+    ## tensorboard preparations
+    save_path = os.path.join(config['logging_params']['save_dir'], config['name'],
+                           config['logging_params']['name'])
+    print('saving file name is ', save_path)
+
+    checkpoint_dir = os.path.join( save_path, 'checkpoints')
+    train_writer = SummaryWriter(os.path.join(save_path, 'training'))
+    val_writer = SummaryWriter(os.path.join(save_path, 'val'))
+    ## tensorboard preparations
+
+
+    ### data generation data loader preperation
+    train_dataGen = dataGenBigEarthLMDB_joint(
+        bigEarthPthLMDB_S2="C:/Users/Markus/Desktop/project/data/BigEarth_Serbia_Summer_S2.lmdb",
+        bigEarthPthLMDB_S1="C:/Users/Markus/Desktop/project/data/BigEarth_Serbia_Summer_S1.lmdb",
+        state='train',
+        train_csv=config["train_csv"],
+        val_csv=config["val_csv"],
+        test_csv=config["test_csv"]
+    )
+
+    val_dataGen = dataGenBigEarthLMDB_joint(
+        bigEarthPthLMDB_S2="C:/Users/Markus/Desktop/project/data/BigEarth_Serbia_Summer_S2.lmdb",
+        bigEarthPthLMDB_S1="C:/Users/Markus/Desktop/project/data/BigEarth_Serbia_Summer_S1.lmdb",
+        state='val',
+        train_csv=config["train_csv"],
+        val_csv=config["val_csv"],
+        test_csv=config["test_csv"]
+    )
+
+
+    train_data_loader = DataLoader(train_dataGen, config["batch_size"], num_workers=0, shuffle=True, pin_memory=True)
+    val_data_loader = DataLoader(val_dataGen, config["batch_size"], num_workers=0, shuffle=True, pin_memory=True)
+
+    ### data generation data loader preperation
+
+
+    ## model,optimizer, scheduler, loss_func initilization
+
+    model = get_model(config["type"],config["n_features"],config["projection_dim"],config["out_channels"])
+    model.to(device)
+
+    optimizer = get_optimizer(model, config["optimizer"],config["learning_rate"],config["weight_decay"])
+    #scheduler = get_scheduler(optimizer, config["schedluer_gamma"]
+    loss_func = get_loss_func(config["loss_func"],config["projection_dim"])
 
 
 
-def train(trainloader, model, criterion , optimizer,  epoch,train_writer):
+    ## save params in yaml file
+    save_params(config)
+
+    min_val_loss = math.inf
+
+    for epoch in range(config["start_epoch"], config["epochs"]):
+        print('Epoch {}/{}'.format(epoch+1, config["epochs"]))
+        print('-' * 10)
+
+        train(model, train_data_loader, loss_func, optimizer, epoch, train_writer, config)
+
+        if epoch % 2 == 0:
+
+            val_loss = val(val_data_loader, model, loss_func, epoch, val_writer, config)
+
+            is_best_val = val_loss < min_val_loss
+            best_val = min(val_loss,min_val_loss)
+
+            save_checkpoint({
+                'epoch': epoch,
+                'state_dict': model.state_dict(),
+                'optimizer': optimizer.state_dict(),
+                'best_val': best_val
+            }, checkpoint_dir, is_best_val)
+
+def train(model, trainloader,loss_func , optimizer,  epoch,train_writer,config):
 
     loss_tracker = MetricTracker()
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     model.train()
 
-    for idx, data in enumerate(tqdm(trainloader, desc="training")):
-        #imgs = data['img'].to(torch.device("cuda"))
-        #labels = data['label'].to(torch.device("cuda"))
+    for idx, batch in enumerate(tqdm(trainloader, desc="training")):
+        imgs_S1 = batch["bands_S1"].to(device)
+        imgs_S2 = batch["bands_S2"].to(device)
 
-        logits = model(imgs)
+        labels = batch['labels'].to(device)
+
+        h_i, h_j, projection_i, projection_j = model(imgs_S1,imgs_S2) #projection_i and _j are the outputs after the mlp heads
+
+
+        fused = get_fusion(config["fusion"],projection_i,projection_j)
+        loss = loss_func(fused,labels)
+
 
         ### detach gradients
         optimizer.zero_grad()
-
-        loss = criterion(logits, labels)
-
         loss.backward()
         optimizer.step()
 
-        loss_tracker.update(loss.item(), imgs.size(0))
+
+
+        loss_tracker.update(loss.item() )
+
 
     info = {
-        "Loss": loss.tracker.avg,
+        "Loss": loss_tracker.avg,
     }
 
     for tag, value in info.items():
@@ -49,68 +146,53 @@ def train(trainloader, model, criterion , optimizer,  epoch,train_writer):
         loss_tracker.avg
     ))
 
+    #if config['scheduler_gamma']:
+        #scheduler.step()
 
 
-
-def val(valloader, model, criterion , optimizer,  epoch, val_writer):
+def val(valloader, model, loss_func , epoch, val_writer,config):
 
     model.eval()
-
-    logits = []
-    y_true = []
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    loss_tracker = MetricTracker()
 
     with torch.no_grad():
-        for idx, data in enumerate(tqdm(valloader, desc="validation")):
-            imgs = data['img'].to(torch.device("cuda"))
-            labels = data['label'].to(torch.device("cpu"))
+        for idx, batch in enumerate(tqdm(valloader, desc="validation")):
+            imgs_S1 = batch[["bands_S1"]].to(device)
+            imgs_S2 = batch[["bands_S2"]].to(device)
 
-            logits_batch = model(imgs)
+            labels = batch['labels'].to(device)
 
-            y_true += list(labels.numpy())
-            logits += list(logits_batch.cpu().numpy())
+            h_i, h_j, projection_i, projection_j = model(imgs_S1,imgs_S2)
+            # projection_i and j are the outputs after the mlp heads
 
-    y_true = np.asarray(y_true)
-    logits = np.asarray(logits)
+            fused = get_fusion(config["fusion"], projection_i, projection_j)
+            loss = loss_func(fused, labels)
 
-    y_pred = np.argmax(logits, axis=1)
-
-
+            loss_tracker.update(loss.item())
 
     info = {
-        'Acc': acc
+        'Val loss': loss.item(),
     }
     for tag, value in info.items():
         val_writer.add_scalar(tag, value, epoch)
-
-    print('Test Acc: {:.6f} '.format(
-        acc,
+    print('Validation Loss: {:.6f}'.format(
+        loss_tracker.avg
     ))
 
-    return acc
+    return loss
 
 
-def main():
 
 
-    config = parse_config(filename)
 
-    ## tensorboard preparations
-    sv_name = datetime.strftime(datetime.now(), '%Y%m%d_%H%M%S')
-    print('saving file name is ', sv_name)
 
-    checkpoint_dir = os.path.join('./', sv_name, 'checkpoints')
-    logs_dir = os.path.join('./', sv_name, 'logs')
-    train_writer = SummaryWriter(os.path.join(logs_dir, 'runs', sv_name, 'training'))
-    val_writer = SummaryWriter(os.path.join(logs_dir, 'runs', sv_name, 'val'))
-    ## tensorboard preparations
 
-    train_data_loader = DataLoader(train_data, config["batch_size"], num_workers=4, shuffle=True, pin_memory=True)
 
-    for epoch in range(config["start_epoch"], config["epochs"]):
-        print('Epoch {}/{}'.format(epoch, config["epochs"] - 1))
-        print('-' * 10)
+
+
 
 
 if __name__ == "__main__":
 
-    main("C:\Users\Markus\Desktop\project\config\args.yaml")
+    main("C:/Users/Markus/Desktop/project/config/args.yaml")
