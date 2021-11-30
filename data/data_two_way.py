@@ -83,7 +83,8 @@ bands_std = {
 
 class dataGenBigEarthLMDB:
     """
-        With this class you can generate data for one modality, e.g. S1
+        With this class you can generate data for one modality not for both, e.g. S1
+        output is a dictionary with the stacked bands keys are bands and label
     """
 
     def __init__(self,bigEarthPthLMDB ,  state='train',modality =None,
