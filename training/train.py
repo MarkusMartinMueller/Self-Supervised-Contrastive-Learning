@@ -103,6 +103,8 @@ def main(filename):
                     'optimizer': optimizer.state_dict(),
                 }, checkpoint_dir, )
 
+                min_val_loss = val_loss
+
 def train(model, trainloader,loss_func , optimizer,  epoch,train_writer,config):
 
     loss_tracker = MetricTracker()
