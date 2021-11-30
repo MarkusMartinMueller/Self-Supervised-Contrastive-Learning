@@ -11,8 +11,10 @@ def fusion_concat(z_i: torch.tensor,z_j:torch.tensor) -> torch.tensor:
     :return:
     concat_fusion: torch.tensor as concatenation along first dim, shape should be [batch_size,2*projection_dim]
     """
-
+    assert z_i.dim == 2
+    assert z_j.dim == 2
     assert z_i.shape == z_j.shape
+
 
     return torch.cat((z_i, z_j), 1)
 
