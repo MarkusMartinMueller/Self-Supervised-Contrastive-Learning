@@ -76,7 +76,7 @@ def main(filename):
 
     optimizer = get_optimizer(model, config["optimizer"],config["learning_rate"],config["weight_decay"])
     #scheduler = get_scheduler(optimizer, config["schedluer_gamma"]
-    loss_func = get_loss_func(config["loss_func"],config["projection_dim"])
+    loss_func = get_loss_func(config["loss_func"],config["projection_dim"],config["fusion"])
 
 
 
@@ -122,7 +122,7 @@ def train(model, trainloader,loss_func , optimizer,  epoch,train_writer,config):
 
 
         fused = get_fusion(config["fusion"],projection_i,projection_j)
-        loss = loss_func(fused,labels,config["fusion"])
+        loss = loss_func(fused,labels)
 
 
         ### detach gradients

@@ -5,16 +5,13 @@ import torchvision
 import math
 from torch.nn import functional as F
 
-
 from loss.classification_loss import ClassificationLoss
 
 
-
-def get_loss_func(name,projection_dim):
-
+def get_loss_func(name, projection_dim, fusion):
     if name == "classification":
 
-        cls = ClassificationLoss(projection_dim, n_classes=19)
+        cls = ClassificationLoss(projection_dim=projection_dim, n_classes=19, fusion=fusion)
 
         return cls
 
