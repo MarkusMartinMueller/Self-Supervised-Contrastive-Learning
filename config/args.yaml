@@ -4,7 +4,7 @@
 
 batch_size: 32
 start_epoch: 0
-epochs: 2
+epochs: 100
 pretrain: False
 type: "joint" # in the supervised setting, decision between joint or seperate model
 train_csv: "C:/Users/Markus/Desktop/splits_mm_serbia/train.csv"
