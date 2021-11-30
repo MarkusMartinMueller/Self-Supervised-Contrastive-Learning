@@ -122,7 +122,7 @@ def train(model, trainloader,loss_func , optimizer,  epoch,train_writer,config):
 
 
         fused = get_fusion(config["fusion"],projection_i,projection_j)
-        loss = loss_func(fused,labels)
+        loss = loss_func(fused,labels,config["fusion"])
 
 
         ### detach gradients
