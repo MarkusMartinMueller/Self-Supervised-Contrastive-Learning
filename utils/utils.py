@@ -8,7 +8,6 @@ import yaml
 def save_checkpoint(state,checkpoint_dir):
 
     filename = os.path.join(checkpoint_dir + '_model_best.pth.tar')
-
     torch.save(state, filename)
     print("Saved PyTorch Model State to model.pth")
 

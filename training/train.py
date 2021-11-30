@@ -97,7 +97,6 @@ def main(filename):
 
             if val_loss < min_val_loss :
 
-
                 save_checkpoint({
                     'epoch': epoch,
                     'state_dict': model.state_dict(),
