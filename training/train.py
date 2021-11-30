@@ -158,8 +158,8 @@ def val(valloader, model, loss_func , epoch, val_writer,config):
 
     with torch.no_grad():
         for idx, batch in enumerate(tqdm(valloader, desc="validation")):
-            imgs_S1 = batch[["bands_S1"]].to(device)
-            imgs_S2 = batch[["bands_S2"]].to(device)
+            imgs_S1 = batch["bands_S1"].to(device)
+            imgs_S2 = batch["bands_S2"].to(device)
 
             labels = batch['labels'].to(device)
 
