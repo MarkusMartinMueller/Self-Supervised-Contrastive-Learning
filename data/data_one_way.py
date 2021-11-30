@@ -83,6 +83,11 @@ bands_std = {
 
 class dataGenBigEarthLMDB_joint:
 
+    """
+
+    output is a dictionary with keys bands_S1, bands_S2 and labels
+    """
+
     def __init__(self,bigEarthPthLMDB_S2, bigEarthPthLMDB_S1,  state='train',
                  train_csv=None, val_csv=None, test_csv=None):
 
@@ -115,7 +120,7 @@ class dataGenBigEarthLMDB_joint:
 
                     self.patch_names.append(row)
 
-        elif self.state == 'val':
+        elif self.state == "val":
             with open(self.val_bigEarth_csv, 'r') as f:
                 csv_reader = csv.reader(f)
                 for row in csv_reader:
@@ -148,12 +153,13 @@ class dataGenBigEarthLMDB_joint:
         to_tensor_S2 = transforms.Compose([ToTensor(modality=  "S2")])
         to_tensor_S1 = transforms.Compose([ToTensor(modality=  "S1")])
 
+        with self.env1.begin(write=False) as txn1:
+            byteflow_S1 = txn1.get(patch_name[1].encode())
 
-        with self.env2.begin(write=False) as txn:
-            byteflow_S2 = txn.get(patch_name[0].encode())
+        with self.env2.begin(write=False) as txn2:
+            byteflow_S2 = txn2.get(patch_name[0].encode())
 
-        with self.env1.begin(write=False) as txn:
-            byteflow_S1 = txn.get(patch_name[1].encode())
+
 
 
 
@@ -191,7 +197,9 @@ class dataGenBigEarthLMDB_joint:
 
 
 def interp_band(bands, img10_shape=[120, 120]):
-
+    """
+    some old code for interpolating and upsampling the bands20
+    """
     #torch.nn.functional.interpolate(bands, [120, 120], mode="bicubic")
     print(bands.shape)
     bands_interp = np.zeros([bands.shape[0]] + img10_shape).astype(np.float32)
