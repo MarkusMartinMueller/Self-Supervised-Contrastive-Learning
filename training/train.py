@@ -13,7 +13,7 @@ import os
 
 ##local imports
 
-from models.network import  TwoBranch, get_model
+from models.network import   get_model
 from data.data_one_way import dataGenBigEarthLMDB_joint
 from loss.get_loss import get_loss_func
 
@@ -101,7 +101,7 @@ def main(filename):
                     'epoch': epoch,
                     'state_dict': model.state_dict(),
                     'optimizer': optimizer.state_dict(),
-                }, checkpoint_dir, )
+                }, checkpoint_dir )
 
                 min_val_loss = val_loss
 
