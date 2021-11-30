@@ -13,7 +13,7 @@ import os
 
 ##local imports
 
-from models.network import   get_model
+from models.network import get_model
 from data.data_one_way import dataGenBigEarthLMDB_joint
 from loss.get_loss import get_loss_func
 
@@ -195,4 +195,4 @@ def val(valloader, model, loss_func , epoch, val_writer,config):
 
 if __name__ == "__main__":
 
-    main("C:/Users/Markus/Desktop/project/config/args.yaml")
+    main("/config/args.yaml")
