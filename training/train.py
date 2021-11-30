@@ -95,15 +95,14 @@ def main(filename):
 
             val_loss = val(val_data_loader, model, loss_func, epoch, val_writer, config)
 
-            is_best_val = val_loss < min_val_loss
-            best_val = min(val_loss,min_val_loss)
+            if val_loss < min_val_loss :
 
-            save_checkpoint({
-                'epoch': epoch,
-                'state_dict': model.state_dict(),
-                'optimizer': optimizer.state_dict(),
-                'best_val': best_val
-            }, checkpoint_dir, is_best_val)
+
+                save_checkpoint({
+                    'epoch': epoch,
+                    'state_dict': model.state_dict(),
+                    'optimizer': optimizer.state_dict(),
+                }, checkpoint_dir, )
 
 def train(model, trainloader,loss_func , optimizer,  epoch,train_writer,config):
 
