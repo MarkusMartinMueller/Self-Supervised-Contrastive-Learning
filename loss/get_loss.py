@@ -5,7 +5,7 @@ import torchvision
 import math
 from torch.nn import functional as F
 
-from loss.classification_loss import ClassificationLoss
+from loss import ClassificationLoss
 
 
 def get_loss_func(name, projection_dim, fusion):
