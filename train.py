@@ -24,7 +24,6 @@ from utils import get_optimizer
 from utils import save_checkpoint
 
 from models import get_model
-
 from data import dataGenBigEarthLMDB_joint
 from loss import get_loss_func
 
@@ -47,8 +46,8 @@ def main(filename):
 
     ### data generation data loader preperation
     train_dataGen = dataGenBigEarthLMDB_joint(
-        bigEarthPthLMDB_S2="/media/storagecube/markus/project/data/BigEarth_Serbia_Summer_S2.lmdb",
-        bigEarthPthLMDB_S1="/media/storagecube/markus/project/data/BigEarth_Serbia_Summer_S1.lmdb",
+        bigEarthPthLMDB_S2=config["bigEarthPthLMDB_S2"],
+        bigEarthPthLMDB_S1=config["bigEarthPthLMDB_S1"],
         state='train',
         train_csv=config["train_csv"],
         val_csv=config["val_csv"],
@@ -56,8 +55,8 @@ def main(filename):
     )
 
     val_dataGen = dataGenBigEarthLMDB_joint(
-        bigEarthPthLMDB_S2="/media/storagecube/markus/project/data/BigEarth_Serbia_Summer_S2.lmdb",
-        bigEarthPthLMDB_S1="/media/storagecube/markus/project/data/BigEarth_Serbia_Summer_S1.lmdb",
+        bigEarthPthLMDB_S2=config["bigEarthPthLMDB_S2"],
+        bigEarthPthLMDB_S1=config["bigEarthPthLMDB_S1"],
         state='val',
         train_csv=config["train_csv"],
         val_csv=config["val_csv"],

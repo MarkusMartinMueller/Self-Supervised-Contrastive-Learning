@@ -7,3 +7,5 @@ data/BigEarth_Serbia_Summer_S2.lmdb
 
 data/BigEarth_Serbia_Summer_S1_old.lmdb
 data/BigEarth_Serbia_Summer_S2_old.lmdb
+data/t.py
+data/data_two_way.py
