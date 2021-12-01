@@ -4,23 +4,25 @@
   Created: 202-11-09
 """
 
-import torch
-import torch.nn as nn
+
 from torch.utils.data import DataLoader
 
 
 
+import torch
+from torch import nn
+
 #local imports
-from models.ResNet import ResNet50_S1, ResNet50_S2, ResNet50_joint
-from data.data_one_way import dataGenBigEarthLMDB_joint
-from data.data_two_way import dataGenBigEarthLMDB
-from utils.fusion import fusion_concat,fusion_avg,fusion_sum,fusion_max
-from loss.classification_loss import ClassificationLoss
+from models import ResNet50_S1, ResNet50_S2, ResNet50_joint
+from data import dataGenBigEarthLMDB_joint
+#from data import dataGenBigEarthLMDB
+from utils import fusion_concat,fusion_avg,fusion_sum,fusion_max
+from loss import ClassificationLoss
 
 
 class TwoBranch(nn.Module):
 
-    def __init__(self, encoder_s1, encoder_s2, encoder_joint, projection_dim, n_features,type):
+    def __init__(self, encoder_s1, encoder_s2, encoder_joint, projection_dim, n_features, type):
         super(TwoBranch, self).__init__()
         """
         As encoder the commonly used ResNet50 is adopted to obtain hi = f(xi)
@@ -136,7 +138,7 @@ if __name__ == "__main__":
 
     h_i, h_j, projection_i, projection_j = net(inputs_s1, inputs_s2)
 
-    cls = ClassificationLoss(projection_dim=128, n_classes=19)
+    cls = ClassificationLoss(projection_dim=128, n_classes=19,fusion ="avg")
 
     labels = image["labels"]
     from utils.utils import MetricTracker
@@ -154,7 +156,7 @@ if __name__ == "__main__":
     ))
     print(h_i.shape, h_j.shape, projection_i.shape, projection_j.shape)
 
-    print(fusion_concat(projection_i, projection_j).shape)
+    #print(fusion_concat(projection_i, projection_j).shape)
     print(fusion_avg(projection_i, projection_j).shape)
     print(fusion_sum(projection_i, projection_j).shape)
     print(fusion_max(projection_i, projection_j).shape)

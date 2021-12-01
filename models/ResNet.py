@@ -1,6 +1,6 @@
 import torch
-import torch.nn as nn
-import torchvision.models as models
+from torch import nn
+from torchvision import models
 
 
 class ResNet50_S2(nn.Module):
@@ -93,18 +93,19 @@ class ResNet50_joint(nn.Module):
     """
     Joint Encoder for both modalities
     """
-
     def __init__(self, out_channels=32):
         super(ResNet50_joint, self).__init__()
 
         resnet = models.resnet50(pretrained=False)
         self.out_channels = out_channels
 
-
-        self.conv1 = nn.Conv2d(self.out_channels, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
+        self.conv_SAR = Conv1(2, out_channels=self.out_channels)
+        self.conv_RGB = Conv1(10, out_channels=self.out_channels)
+        self.conv_first = nn.Conv2d(self.out_channels, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3),
+                                    bias=False)
         self.encoder = nn.Sequential(
 
-            self.conv1,
+            self.conv_first,
             resnet.bn1,
             resnet.relu,
             resnet.maxpool,
@@ -119,16 +120,14 @@ class ResNet50_joint(nn.Module):
 
         input_channels = x.shape[1]
 
-        #if in_channels != self.out_channels:
-            #conv0 = nn.Conv2d(in_channels, self.out_channels, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
-            #x = conv0(x)
+        if input_channels == 2:
+            x = self.conv_SAR(x)  # 1x1 convolution to adjust channel size
 
+        elif input_channels == 10:
+            x = x = self.conv_RGB(x)
 
+        # conv1 = Conv1(input_channels,out_channels =self.out_channels)
 
-        conv1 = Conv1(input_channels,out_channels =self.out_channels)
-
-
-        x = conv1(x)   # 1x1 convolution to adjust channel size
         x = self.encoder(x)
 
         return x
