@@ -117,7 +117,6 @@ class ResNet50_joint(nn.Module):
         )
 
     def forward(self, x):
-
         input_channels = x.shape[1]
 
         if input_channels == 2:
