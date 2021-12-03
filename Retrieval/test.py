@@ -3,12 +3,14 @@ import math
 
 import numpy as np
 import torch
+from torch import nn
 from tqdm import tqdm
 from torch.utils.data import DataLoader
 from datetime import datetime
 from tensorboardX import SummaryWriter
 import os
 import pickle
+from operator import itemgetter
 
 
 # local imports
@@ -24,6 +26,7 @@ from utils import save_params
 from utils import get_scheduler
 from utils import get_optimizer
 from utils import save_checkpoint
+from utils import get_metrics
 
 from models import get_model
 from data import dataGenBigEarthLMDB_joint
@@ -31,6 +34,9 @@ from loss import get_loss_func
 
 
 def test(filename,archive_path):
+    save_path = os.path.join(config['logging_params']['save_dir'], config['name'],
+                             config['logging_params']['name'])
+    print('saving file name is ', save_path)
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     print("Using {} device".format(device))
 
@@ -62,10 +68,12 @@ def test(filename,archive_path):
     for epoch in range(config["start_epoch"], config["epochs"]):
         print('Epoch {}/{}'.format(epoch + 1, config["epochs"]))
         print('-' * 10)
+        retrieve_CM(query_modality, feature_dict, model, query_data_loader, test_writer,epoch, config, device)
+
 
     pass
 
-def retrieve_MM( model, query_loader,  epoch, retrieve_writer, config, device):
+def retrieve_MM( model, query_loader,  epoch,  config, device):
     model.eval()
 
     loss_tracker = MetricTracker()
@@ -83,7 +91,7 @@ def retrieve_MM( model, query_loader,  epoch, retrieve_writer, config, device):
             fused = get_fusion(config["fusion"], projection_i, projection_j)
     pass
 
-def retrieve_CM( query_modality,feature_dict,model, query_loader,  epoch, retrieve_writer, config, device):
+def retrieve_CM( query_modality,feature_dict,num_retrieved,model, query_loader,  test_writer,epoch,  config, device):
     """
     :param query_modality: string - describes the modality S1 or S2 of the query
     :param feature_dict: feature dictionary containing feature_dict: dict - contains for each key a tuple of(torch.tensor: projection_head_s1,torch.tensor: projection_head_s2, fusion, label of archive_image)
@@ -98,7 +106,8 @@ def retrieve_CM( query_modality,feature_dict,model, query_loader,  epoch, retrie
     """
     model.eval()
 
-    loss_tracker = MetricTracker()
+    precision_tracker = MetricTracker()
+    recall_tracker = MetricTracker()
 
     with torch.no_grad():
         for idx, batch in enumerate(tqdm(query_loader, desc="retrieve")):
@@ -110,23 +119,31 @@ def retrieve_CM( query_modality,feature_dict,model, query_loader,  epoch, retrie
 
             labels_query = batch['labels'].to(device)
 
+            all_fused_queries= calculate_fused_query(query, model, feature_dict, query_modality, config, device)
 
-            ## for each cross modality in feature dict calculate fusion and similarity score
-            for idx in range(len(feature_dict)):
+            retrieved_labels = sim_score(all_fused_queries,feature_dict)
+
+            metrics_dict = get_metrics(labels_query, retrieved_labels,num_retrieved)
+
+            Precision = "Total_Precison@{}"
+            Recall = "Total_Recall@{}"
+
+            precision_tracker.update(metrics_dict[Precision.format(num_retrieved)])
+            recall_tracker.update(metrics_dict[Precision.format(num_retrieved)])
+
+    info = {
+        "Recall": recall_tracker,
+        "Precision":precision_tracker,
+    }
+
+    for tag, value in info.items():
+        test_writer.add_scalar(tag, value, epoch)
+
+    print('Precision: {:.6f}, Recall: {:.6f}'.format(
+        precision_tracker,recall_tracker.avg)
+    )
 
 
-                if query_modality == "S1" :
-                    imgs_S2 = torch.squeeze(feature_dict[idx][1]).tolist()  # dim = 1 contains images from Modality S2
-                    h_i, h_j, projection_i, projection_j = model(query, imgs_S2)
-
-
-                elif query_modality == "S2" :
-                    imgs_S1 = torch.squeeze(feature_dict[idx][0]).tolist()  # dim = 0 contains images from Modality S1
-                    h_i, h_j, projection_i, projection_j = model(imgs_S1, query)
-
-                # projection_i and j are the outputs after the mlp heads
-
-                fused_query = get_fusion(config["fusion"], projection_i, projection_j)
 
 
 
@@ -162,20 +179,36 @@ def calculate_fused_query(query,model,feature_dict,query_modality,config,device)
 
         fused_query = get_fusion(config["fusion"], projection_i, projection_j)
 
-        all_fused_queries.append(tuple(fused_query,feature_dict[idx][3]))
+        all_fused_queries.append((fused_query,feature_dict[idx][3]))
 
     return all_fused_queries
 
-def sim_score(fused_query, f_a_vector):
+def sim_score(all_fused_queries,feature_dict):
     """
-    Returns similarity score for query and f_a_vector
-    :param fused_query:  torch.tensor[2048] fusion vector from query_modality and cross modality
+    Returns similarity score for all fusion queries  and all fusioon_archive vectors
 
-    :param f_a_vector: torch.tensor[2048] fusion vector from s1 modality and s2 modality from the trained archive
+    :param all_fused_queries: list containing tuples (fused_query,label_archive_idx) of query and the ith image/label (X_a_i^crossmodality) of the archive
 
+    :param feature_dict: feature dictionary containing feature_dict: dict - contains for each key a tuple of(torch.tensor: projection_head_s1,torch.tensor: projection_head_s2, fusion, label of archive_image)
 
+    :return:
+
+    tuple-    labels sorted from max to min sim_scores are returned as torch.tensors[1,19]
 
     """
+    assert len(all_fused_queries)== len(feature_dict)
+    pairwise_distance = lambda u, v: 0.5 * np.sum(((u - v) ** 2) / (u + v + 1e-10))
+    similarities = []
 
-    pass
+    for idx in range(len(feature_dict)):
+
+
+        sim = pairwise_distance(all_fused_queries[idx][0].cpu().detach().numpy(),feature_dict[idx][2].cpu().detach().numpy())
+
+        similarities.append((sim,all_fused_queries[idx][1]))
+
+    similarities = sorted(similarities,reverse=True)
+    #sim_scores were sorted from max to min as tuples with associated label_archive_idx description (ith image/label (X_a_i^crossmodality) of the archive)
+
+    return tuple(map(itemgetter(1), similarities))
 

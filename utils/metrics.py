@@ -2,7 +2,25 @@ import torch
 import numpy as np
 import pickle
 
-def total_recall(query,feature_dict):
+
+
+def get_metrics(query,retrieved_labels,N=100):
+    Precision = "Total_Precison@{}"
+
+    Recall = "Total_Recall@{}"
+
+    metrics_dict = {}
+
+    for n in range(N):
+        metrics_dict[Precision.format(n+1)] = total_precision(query,retrieved_labels[:n+1])
+        metrics_dict[Recall.format(n+1)] = total_recall(query, retrieved_labels[:n+1])
+
+    return metrics_dict
+
+
+
+
+def total_recall(query,retrieved_labels):
     """
     :query: torch.tensor containing labels with shape[19]
     :feature_dict: dict - contains for each key a tuple of (torch.tensor: projection_head_s1,torch.tensor: projection_head_s2, fusion, label of archive_image)
@@ -16,20 +34,20 @@ def total_recall(query,feature_dict):
     label_q = query.tolist()
 
 
-    for idx in range(len(feature_dict)):
+    for idx in range(len(retrieved_labels)):
 
-        label_a = torch.squeeze(feature_dict[idx][3]).tolist() # dim = 3 contains labels with shape [1,19]
+        label_a = torch.squeeze(retrieved_labels[idx]).tolist()
         recall_mean += recall(label_q,label_a)
 
-    recall_mean = recall_mean / len(feature_dict)
+    recall_mean = recall_mean / len(retrieved_labels)
 
 
     return recall_mean
 
-def total_precision(query,feature_dict):
+def total_precision(query,retrieved_labels):
     """
        :query: torch.tensor containing labels with shape[19]
-       :feature_dict: dict - contains for each key a tuple of (torch.tensor: projection_head_s1,torch.tensor: projection_head_s2, fusion, label of archive_image)
+       :retrieved_labels: tuple - labels sorted from max to min sim_scores are returned as tuple of torch.tensors[1,19]
 
     """
 
@@ -37,11 +55,11 @@ def total_precision(query,feature_dict):
 
     label_q = query.tolist()
 
-    for idx in range(len(feature_dict)):
-        label_a = torch.squeeze(feature_dict[idx][3]).tolist()  # dim = 3 contains labels with shape [1,19]
+    for idx in range(len(retrieved_labels)):
+        label_a = torch.squeeze(retrieved_labels[idx]).tolist()
         precision_mean += precision(label_q, label_a)
 
-    precision_mean = precision_mean / len(feature_dict)
+    precision_mean = precision_mean / len(retrieved_labels)
 
     return precision_mean
 
@@ -84,12 +102,20 @@ def precision(label_q,label_archive)-> float:
 if __name__ == "__main__":
 
 
-    feature_dict = pickle.load(open("C:/Users/Markus/Desktop/project/Retrieval/archive_separate_avg.p", "rb"))
+    retrieved_labels = []
 
-    print(feature_dict[0][3].shape)
+    for x in range(100):
+        t = torch.rand(1,19)
+        thres = torch.Tensor([0.5])  # threshold
+        out = (t > thres).float() * 1
+        retrieved_labels.append(out)
+
+
 
     label = torch.tensor([0., 1., 1., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 1., 0., 1., 0., 0.,
          0.])
 
-    print(total_recall(label,feature_dict))
-    print(total_precision(label, feature_dict))
+    print(total_recall(label,retrieved_labels))
+    print(total_precision(label, retrieved_labels))
+
+    print(get_metrics(label,retrieved_labels))
