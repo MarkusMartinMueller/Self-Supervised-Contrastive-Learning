@@ -48,7 +48,7 @@ class NTxentLoss(nn.Module):
                :param out_2: input feature vector t
                :return: NTXent loss
                """
-        modality_s1= F.normalize(modality_s1)
+        modality_s1 = F.normalize(modality_s1)
         modality_s2 = F.normalize(modality_s2)
 
         out = torch.cat([modality_s1, modality_s2], dim=0)
