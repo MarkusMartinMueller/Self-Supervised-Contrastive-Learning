@@ -63,10 +63,12 @@ def fusion_max(z_i: torch.tensor,z_j:torch.tensor) -> torch.tensor:
 
     assert z_i.shape == z_j.shape
 
-    return torch.maximum(z_i, z_j)
+    return torch.max(z_i, z_j)
 
 
 def get_fusion(name,z_i,z_j):
+
+
     if name == "concat":
         return fusion_concat(z_i,z_j)
     elif name == "avg":
