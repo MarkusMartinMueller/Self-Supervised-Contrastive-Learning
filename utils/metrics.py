@@ -19,7 +19,6 @@ def get_metrics(query,retrieved_labels,N=100):
 
 
 
-
 def total_recall(query,retrieved_labels):
     """
     :query: torch.tensor containing labels with shape[19]
