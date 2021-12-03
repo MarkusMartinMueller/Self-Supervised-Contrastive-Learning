@@ -32,6 +32,7 @@ def main(filename):
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     print("Using {} device".format(device))
 
+
     config = parse_config(filename)
 
     ## tensorboard preparations
@@ -175,4 +176,4 @@ def val(valloader, model, loss_func, epoch, val_writer, config, device):
 
 
 if __name__ == "__main__":
-    main("/media/storagecube/markus/project/config/args.yaml")
+    main("C:/Users/Markus/Desktop/project/config/args.yaml")
