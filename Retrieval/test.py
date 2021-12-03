@@ -143,10 +143,6 @@ def retrieve_CM( query_modality,feature_dict,num_retrieved,model, query_loader, 
         precision_tracker,recall_tracker.avg)
     )
 
-
-
-
-
 def calculate_fused_query(query,model,feature_dict,query_modality,config,device):
     """
 
