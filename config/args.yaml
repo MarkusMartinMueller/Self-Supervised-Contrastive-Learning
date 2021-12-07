@@ -33,7 +33,7 @@ temperature: 0 # for NXT Loss
 
 
 # reload options
-model_path: "save" # set to the directory containing `checkpoint_##.tar` 
+state_dict:  # set to the directory containing `checkpoint_##.tar`
 epoch_num: 100 # set to checkpoint number
 reload: False
 
@@ -42,7 +42,9 @@ reload: False
 
 logging_params:
   save_dir: "logs/"
-  name: "first_test" # maybe a special name
+  name: "test" # maybe a special name
+  summaries: ".../summaries/"
+  suffix: ""
 
 
 
