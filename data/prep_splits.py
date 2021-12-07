@@ -4,7 +4,7 @@ import os
 import csv
 import json
 #from tensorflow_utils import prep_tf_record_files
-from pytorch_utils import prep_lmdb_files
+from data import prep_lmdb_files
 import gdal
 
 
@@ -108,8 +108,8 @@ if __name__ == "__main__":
     elif args.library == 'pytorch':
 
         prep_lmdb_files(
-            bigEarthDir=args.root_folder_s1,
-            labels_folder=args.root_folder_s2,
+            args.root_folder_s1,
+            args.root_folder_s2,
             args.out_folder,
             "S1",
             patch_names_list,
