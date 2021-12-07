@@ -158,7 +158,7 @@ class Retrieval():
             import ray
             from sklearn.metrics import pairwise_distances
             from tqdm import tqdm
-            num_cpus = psutil.cpu_count()
+            num_cpus = 10#psutil.cpu_count()
 
             @ray.remote
             def calc_distance(query_feats, archive_feats):
@@ -260,8 +260,8 @@ class Retrieval():
                 average_cumulative_gains[topk-1] = np.sum(nb_shared_labels[:topk]) / topk
                 average_precision[topk-1] = divide(np.sum((acc_is_shared_labels[:topk] * is_shared_labels[:topk]) / range(1,topk+1)), acc_is_shared_labels[topk-1])
                 weighted_avg_precision[topk-1] = divide(np.sum((average_cumulative_gains[:topk] * is_shared_labels[:topk]) / range(1,topk+1)), acc_is_shared_labels[topk-1])
-                precision[topk-1] = acc_is_shared_labels[topk-1] / topk  
-                recall[topk-1] = 1.0 if acc_is_shared_labels[topk-1] > 0 else 0.0
+                precision[topk-1] = nb_shared_labels[topk-1] / np.sum(retrieved_labels[topk-1]) # acc_is_shared_labels[topk-1] / topk
+                recall[topk-1] = nb_shared_labels[topk-1] / np.sum(query_multi_hot) #1.0 if acc_is_shared_labels[topk-1] > 0 else 0.0
             f1_score = divide(2 * precision * recall, precision + recall)
             return [normalized_discounted_cumulative_gains, average_cumulative_gains, average_precision, weighted_avg_precision, precision, recall, f1_score]
 
@@ -280,7 +280,7 @@ class Retrieval():
                     del hf[key]
             distance = hf['distance']
             import psutil
-            num_cpus = psutil.cpu_count()
+            num_cpus = 10#psutil.cpu_count()
             ray.init(num_cpus=num_cpus, object_store_memory = 30 * 1024 * 1024 * 1024)
             result_ids = []
             process_thres = 1000
