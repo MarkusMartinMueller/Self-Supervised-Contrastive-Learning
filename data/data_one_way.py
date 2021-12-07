@@ -153,7 +153,7 @@ class dataGenBigEarthLMDB_joint:
         bands10, bands20, _, multiHots = loads_pyarrow(byteflow_S2)
 
         sample_S2 = {'bands10': bands10.astype(np.float32), 'bands20': bands20.astype(np.float32),
-                     'label': multiHots.astype(np.float32)}
+                     'label': multiHots.astype(np.float32), 'patch_name': patch_name[0]}
 
         sample_S2 = normalize_S2(sample_S2)
         sample_S2 = to_tensor_S2(sample_S2)
@@ -164,7 +164,7 @@ class dataGenBigEarthLMDB_joint:
 
         vv, vh, multiHots = loads_pyarrow(byteflow_S1)
         sample_S1 = {'vv': vv.astype(np.float32), 'vh': vh.astype(np.float32),
-                     'label': multiHots.astype(np.float32)}
+                     'label': multiHots.astype(np.float32),  'patch_name': patch_name[1]}
 
         sample_S1 = normalize_S1(sample_S1)
         sample_S1 = to_tensor_S1(sample_S1)
@@ -209,6 +209,8 @@ def dict_concat(sample_S1: dict, sample_S2: dict) -> dict:
     concat_dict["bands_S2"] = bands_S2
     concat_dict["bands_S1"] = bands_S1
     concat_dict["labels"] = sample_S2[keys_S2[2]]
+    concat_dict["patch_name_S1"] = sample_S1[keys_S1[3]]
+    concat_dict["patch_name_S2"] = sample_S2[keys_S2[3]]
 
     return concat_dict
 
@@ -240,7 +242,7 @@ class Normalize(object):
     def __call__(self, sample):
 
         if self.modality == "S2":
-            band10, band20, label = sample['bands10'], sample['bands20'], sample['label']
+            band10, band20, label,patch_name = sample['bands10'], sample['bands20'], sample['label'],sample['patch_name']
             band10_norm = np.zeros((4, 120, 120), np.float32)
             band20_norm = np.zeros((6, 60, 60), np.float32)
 
@@ -250,10 +252,10 @@ class Normalize(object):
             for idx, (t, m, s) in enumerate(zip(band20, self.bands20_mean, self.bands20_std)):
                 band20_norm[idx] = np.divide(np.subtract(t, m), s)
 
-            return {'bands10': band10_norm, 'bands20': band20_norm, 'label': label}
+            return {'bands10': band10_norm, 'bands20': band20_norm, 'label': label, 'patch_name': patch_name}
 
         elif self.modality == "S1":
-            vv, vh, label = sample['vv'], sample['vh'], sample['label']
+            vv, vh, label,patch_name = sample['vv'], sample['vh'], sample['label'],sample['patch_name']
             vv_norm = np.zeros((1, 120, 120), np.float32)
             vh_norm = np.zeros((1, 120, 120), np.float32)
 
@@ -263,7 +265,7 @@ class Normalize(object):
             for idx, (t, m, s) in enumerate(zip(vh, self.vh_mean, self.vh_std)):
                 vh_norm[idx] = (t - m) / s
 
-            return {'vv': vv_norm, 'vh': vh_norm, 'label': label}
+            return {'vv': vv_norm, 'vh': vh_norm, 'label': label, 'patch_name': patch_name}
 
 
 class ToTensor(object):
@@ -274,15 +276,15 @@ class ToTensor(object):
 
     def __call__(self, sample):
         if self.modality == "S2":
-            band10, band20, label = sample['bands10'], sample['bands20'], sample['label']
+            band10, band20, label,patch_name = sample['bands10'], sample['bands20'], sample['label'],sample['patch_name']
 
-            sample = {'bands10': torch.tensor(band10), 'bands20': torch.tensor(band20), 'label': label}
+            sample = {'bands10': torch.tensor(band10), 'bands20': torch.tensor(band20), 'label': label,'patch_name':patch_name}
             return sample
         elif self.modality == "S1":
 
-            vv, vh, label = sample['vv'], sample['vh'], sample['label']
+            vv, vh, label,patch_name = sample['vv'], sample['vh'], sample['label'],sample['patch_name']
 
-            sample = {'vv': torch.tensor(vv), 'vh': torch.tensor(vh), 'label': label}
+            sample = {'vv': torch.tensor(vv), 'vh': torch.tensor(vh), 'label': label,'patch_name':patch_name}
             return sample
 
 
