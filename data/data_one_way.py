@@ -4,6 +4,7 @@ import lmdb
 import csv
 import pyarrow as pa
 import torchvision.transforms as transforms
+import pickle
 from skimage import transform
 
 BAND_STATS = {
@@ -144,13 +145,16 @@ class dataGenBigEarthLMDB_joint:
         to_tensor_S1 = transforms.Compose([ToTensor(modality="S1")])
 
         with self.env2.begin(write=False) as txn:
-            byteflow_S2 = txn.get(patch_name[0].encode())
+            byteflow_S2 = txn.get(patch_name[0].encode()) # buf
+
 
         with self.env1.begin(write=False) as txn:
             byteflow_S1 = txn.get(patch_name[1].encode())
 
+
+
         # Load S2 bytflow and create upsampled S2 dictionary
-        bands10, bands20, _, multiHots = loads_pyarrow(byteflow_S2)
+        bands10, bands20, _, multiHots = pickle.loads(byteflow_S2)
 
         sample_S2 = {'bands10': bands10.astype(np.float32), 'bands20': bands20.astype(np.float32),
                      'label': multiHots.astype(np.float32), 'patch_name': patch_name[0]}
@@ -162,7 +166,7 @@ class dataGenBigEarthLMDB_joint:
         # sample['bands20'] = interp_band(bands20).astype(np.float32)
         # sample = to_tensor(sample)
 
-        vv, vh, multiHots = loads_pyarrow(byteflow_S1)
+        vv, vh, multiHots = pickle.loads(byteflow_S1)
         sample_S1 = {'vv': vv.astype(np.float32), 'vh': vh.astype(np.float32),
                      'label': multiHots.astype(np.float32),  'patch_name': patch_name[1]}
 
