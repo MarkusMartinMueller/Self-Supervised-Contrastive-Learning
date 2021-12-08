@@ -124,15 +124,15 @@ def parse_json_labels(f_j_path):
     return j_f_c['labels']
 
 
-def dumps_pyarrow(obj):
+def dumps_pickle(obj):
     """
     Serialize an object.
     Returns:
         Implementation-dependent bytes-like object
     """
-    import pyarrow as pa
+    import pickle
 
-    return pa.serialize(obj).to_buffer()
+    return pickle.dumps(obj)
 
 def cls2multiHot_old(cls_vec):
     """
@@ -334,7 +334,7 @@ def prep_lmdb_files(root_folder,labels_folder, out_folder,modality, patch_names_
             bands10, bands20, bands60, patch_name, multiHots_n, multiHots_o = data[0]['bands10'], data[0]['bands20'], data[0][
                 'bands60'], data[0]['patch_name'], data[0]['multi_hots_n'], data[0]['multi_hots_o']
             # txn.put(u'{}'.format(patch_name).encode('ascii'), dumps_pyarrow((bands10, bands20, bands60, multiHots_n, multiHots_o)))
-            txn.put(u'{}'.format(patch_name).encode('ascii'), dumps_pyarrow((bands10, bands20, bands60, multiHots_n)))
+            txn.put(u'{}'.format(patch_name).encode('ascii'), dumps_pickle((bands10, bands20, bands60, multiHots_n)))
             patch_names.append(patch_name)
 
             if idx % 10000 == 0:
@@ -369,7 +369,7 @@ def prep_lmdb_files(root_folder,labels_folder, out_folder,modality, patch_names_
         for idx, data in enumerate(data_loader):
             vv,vh, patch_name, multiHots_n, multiHots_o = data[0]['vv'], data[0]['vh'], data[0]['patch_name'], data[0]['multi_hots_n'], data[0]['multi_hots_o']
             # txn.put(u'{}'.format(patch_name).encode('ascii'), dumps_pyarrow((bands10, bands20, bands60, multiHots_n, multiHots_o)))
-            txn.put(u'{}'.format(patch_name).encode('ascii'), dumps_pyarrow((vv,vh, multiHots_n)))
+            txn.put(u'{}'.format(patch_name).encode('ascii'), dumps_pickle((vv,vh, multiHots_n)))
             patch_names.append(patch_name)
 
             if idx % 10000 == 0:
@@ -383,8 +383,8 @@ def prep_lmdb_files(root_folder,labels_folder, out_folder,modality, patch_names_
     keys = [u'{}'.format(patch_name).encode('ascii') for patch_name in patch_names]
 
     with db.begin(write=True) as txn:
-        txn.put(b'__keys__', dumps_pyarrow(keys))
-        txn.put(b'__len__', dumps_pyarrow(len(keys)))
+        txn.put(b'__keys__', dumps_pickle(keys))
+        txn.put(b'__len__', dumps_pickle(len(keys)))
 
     print("Flushing database ...")
     db.sync()
