@@ -1,12 +1,11 @@
 """
   File: network.py
-  Authors: Markus Mueller (m.markus.mueler@campus.tu-berlin.de)
+  Authors: Markus Mueller (markus.m.mueller@campus.tu-berlin.de)
   Created: 202-11-09
 """
 
 
 from torch.utils.data import DataLoader
-
 
 
 import torch
@@ -17,7 +16,7 @@ from models import ResNet50_S1, ResNet50_S2, ResNet50_joint
 from data import dataGenBigEarthLMDB_joint
 #from data import dataGenBigEarthLMDB
 from utils import fusion_concat,fusion_avg,fusion_sum,fusion_max
-from loss import ClassificationLoss
+from loss import ClassificationLoss, NTxentLoss
 
 
 class TwoBranch(nn.Module):
@@ -38,14 +37,15 @@ class TwoBranch(nn.Module):
         # add mlp projection head
 
         self.projection_head_s1 = nn.Sequential(
-                                                nn.Linear(self.n_features, n_features),
-                                                nn.ReLU(),
-                                                nn.Linear(self.n_features, projection_dim)
+
+
+                                                nn.Linear(self.n_features, projection_dim),
+                                                nn.ReLU()
                                                 )
 
-        self.projection_head_s2 = nn.Sequential(nn.Linear(self.n_features, n_features),
-                                                nn.ReLU(),
-                                                nn.Linear(self.n_features, projection_dim)
+        self.projection_head_s2 = nn.Sequential(
+                                                nn.Linear(self.n_features, projection_dim),
+                                                nn.ReLU()
 
                                                 )
 
@@ -117,7 +117,6 @@ if __name__ == "__main__":
         bigEarthPthLMDB_S2="C:/Users/Markus/Desktop/project/data/BigEarth_Serbia_Summer_S2.lmdb",
         bigEarthPthLMDB_S1="C:/Users/Markus/Desktop/project/data/BigEarth_Serbia_Summer_S1.lmdb",
         state='val',
-
         train_csv=train_csv,
         val_csv=val_csv,
         test_csv=test_csv
@@ -126,23 +125,35 @@ if __name__ == "__main__":
 
     image = next(iter(train_data_loader))
 
-    #inputs_s1 = torch.randn((4, 10, 224, 224))
-    #inputs_s2 = torch.randn((4, 2, 224, 224))
+
 
     inputs_s1 = image["bands_S1"]
     inputs_s2 = image["bands_S2"]
+    labels = image['labels']
+
+
+
 
 
 
     net = get_model(path_type = "separate",n_features=2048, projection_dim= 128,out_channels=32)
-
+    net.eval()
     h_i, h_j, projection_i, projection_j = net(inputs_s1, inputs_s2)
 
+
+
+
+
+
+
+    simclr = NTxentLoss(0.8)
     cls = ClassificationLoss(projection_dim=128, n_classes=19,fusion ="avg")
 
-    labels = image["labels"]
     from utils.utils import MetricTracker
+
     loss_tracker = MetricTracker()
+
+    simclr_loss = simclr(projection_i, projection_j)
 
 
     #loss_concat = cls(fusion_concat(projection_i, projection_j),labels)
@@ -150,7 +161,7 @@ if __name__ == "__main__":
     loss_sum = cls(fusion_sum(projection_i, projection_j),labels)
     loss_max = cls (fusion_max(projection_i, projection_j),labels)
 
-    loss_tracker.update(loss_avg.item())
+    loss_tracker.update(simclr_loss.item())
     print('Train Loss: {:.6f}'.format(
         loss_tracker.avg
     ))
