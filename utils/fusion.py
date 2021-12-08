@@ -31,7 +31,7 @@ def fusion_avg(z_i: torch.tensor,z_j:torch.tensor) -> torch.tensor:
 
     assert z_i.shape == z_j.shape
 
-    return torch.add(z_i, z_j)
+    return torch.add(z_i, z_j)/2
 
 def fusion_sum(z_i: torch.tensor,z_j:torch.tensor) -> torch.tensor:
     """
