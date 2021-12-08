@@ -26,14 +26,13 @@ class ClassificationLoss(nn.Module):
             self.projection_dim = projection_dim
 
         self.fc = nn.Linear(self.projection_dim, self.n_classes)
+        self.criterion = nn.BCEWithLogitsLoss(reduction='mean')
 
     def forward(self, fused, labels):
 
         logits = self.fc(fused)
 
-        criterion = nn.BCEWithLogitsLoss(reduction='mean')
-
-        loss = criterion(logits, labels)
+        loss = self.criterion(logits, labels)
 
         return loss
 
