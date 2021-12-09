@@ -82,8 +82,8 @@ class Config():
 
 
 
-
-        filepath = r"C:/Users/mmuel/Documents/Studium/RSIM/config/args_{}_{}.yaml".format(contents['type'],contents['fusion'])
+        ## change file path on erde
+        filepath = r"/media/storagecube/markus/project/config/args_{}_{}.yaml".format(contents['type'],contents['fusion'])
         with open(filepath, 'w') as file:  # create a new yaml file
             data = yaml.dump(DEFAULTS, file)
 
