@@ -59,7 +59,7 @@ class Config():
 
 
         # reload options
-        'state_dict': "/media/storagecube/markus/project/logs/Resnet50/joint_concat/checkpoints_model_best.pth.tar", # set to the directory containing `checkpoint_##.tar`
+        'state_dict': "", # set to the directory containing `checkpoint_##.tar`
         'epoch_num': 100, # set to checkpoint number
         'reload': False,
 
