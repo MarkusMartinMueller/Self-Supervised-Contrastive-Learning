@@ -177,6 +177,25 @@ def get_logger():
     return logging.getLogger()
 
 
+def check_h5_metric(file):
+
+    hf = h5py.File(file, 'r')
+    keys= list(hf.keys())
+
+    for key in keys:
+        out = np.array(hf[key])
+        print("{} : {}".format(key,out))
+
+
 if __name__ == "__main__":
 
-    print(parse_config("C:/Users/Markus/Desktop/project/config/args.yaml"))
+    import h5py
+    hf = h5py.File('C:/Users/Markus/Desktop/splits_mm_serbia/retrieval.h5', 'r')
+    keys = hf.keys()
+
+    out = np.array(hf['precision'])
+    print(out[0])
+
+
+
+
