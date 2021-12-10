@@ -48,6 +48,8 @@ class NTxentLoss(nn.Module):
                :param out_2: input feature vector t
                :return: NTXent loss
                """
+
+        #print(torch.linalg.norm(modality_s1,dim = 1))
         modality_s1 = F.normalize(modality_s1)
         modality_s2 = F.normalize(modality_s2)
 
@@ -55,7 +57,10 @@ class NTxentLoss(nn.Module):
 
         # cov and sim: [2 * batch_size, 2 * batch_size * world_size]
         # neg: [2 * batch_size]
+
+
         cov = torch.mm(out, out.t().contiguous())
+
         sim = torch.exp(cov / self.temperature)
         neg = sim.sum(dim=-1)
 
@@ -74,8 +79,8 @@ class NTxentLoss(nn.Module):
 if __name__ == "__main__":
 
     nxt = NTxentLoss(1)
-    inputs_s1 = torch.randn((4, 128))
-    inputs_s2 = torch.randn((4, 128))
+    inputs_s1 = torch.randn((1, 128))
+    inputs_s2 = torch.randn((1, 128))
 
     loss = nxt(inputs_s1, inputs_s2)
 
