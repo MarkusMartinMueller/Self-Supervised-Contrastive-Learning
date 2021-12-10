@@ -32,7 +32,6 @@ def main(filename):
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     print("Using {} device".format(device))
 
-
     config = parse_config(filename)
 
     ## tensorboard preparations
@@ -42,7 +41,7 @@ def main(filename):
 
     checkpoint_dir = os.path.join(save_path, 'checkpoints')
     train_writer = SummaryWriter(os.path.join(save_path, 'training'))
-    val_writer = SummaryWriter(os.path.join(save_path, 'val'))
+    # val_writer = SummaryWriter(os.path.join(save_path, 'val'))
     ## tensorboard preparations
 
     ### data generation data loader preperation
@@ -92,7 +91,7 @@ def main(filename):
 
         if epoch % 2 == 0:
 
-            val_loss = val(val_data_loader, model, loss_func, epoch, val_writer, config, device)
+            val_loss = val(val_data_loader, model, loss_func, epoch, train_writer, config, device)
 
             if val_loss < min_val_loss:
                 save_checkpoint({
@@ -102,6 +101,8 @@ def main(filename):
                 }, checkpoint_dir)
 
                 min_val_loss = val_loss
+    train_writer.close()
+    # val_writer.close()
 
 
 def train(model, trainloader, loss_func, optimizer, epoch, train_writer, config, device):
@@ -168,6 +169,7 @@ def val(valloader, model, loss_func, epoch, val_writer, config, device):
     }
     for tag, value in info.items():
         val_writer.add_scalar(tag, value, epoch)
+
     print('Validation Loss: {:.6f}'.format(
         loss_tracker.avg
     ))
@@ -177,9 +179,10 @@ def val(valloader, model, loss_func, epoch, val_writer, config, device):
 
 if __name__ == "__main__":
     import argparse
+
     parser = argparse.ArgumentParser(description='Checking h5 metrics')
     parser.add_argument('--filepath', metavar='PATH', help='path to the saved args.yaml')
 
     args = parser.parse_args()
     main(args.filepath)
-    #main("C:/Users/Markus/Desktop/project/config/args.yaml")
+    # main("C:/Users/Markus/Desktop/project/config/args.yaml")
