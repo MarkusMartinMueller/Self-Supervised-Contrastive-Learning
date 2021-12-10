@@ -36,7 +36,7 @@ class Retrieval():
                                            self.config['logging_params']['name'], 'retrieval.h5')
 
         self.state_dict_path = config["state_dict"]
-        self.device = torch.device('cpu')
+        self.device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
     def prep_feature_extraction(self):
 
@@ -45,24 +45,24 @@ class Retrieval():
         self.model.to(self.device)
 
         query_dataGen = dataGenBigEarthLMDB_joint(
-            bigEarthPthLMDB_S2=config["bigEarthPthLMDB_S2"],
-            bigEarthPthLMDB_S1=config["bigEarthPthLMDB_S1"],
+            bigEarthPthLMDB_S2=self.config["bigEarthPthLMDB_S2"],
+            bigEarthPthLMDB_S1=self.config["bigEarthPthLMDB_S1"],
             state='train',
-            train_csv=config["train_csv"],
-            val_csv=config["val_csv"],
-            test_csv=config["test_csv"]
+            train_csv=self.config["train_csv"],
+            val_csv=self.config["val_csv"],
+            test_csv=self.config["test_csv"]
         )
         archive_dataGen = dataGenBigEarthLMDB_joint(
-            bigEarthPthLMDB_S2=config["bigEarthPthLMDB_S2"],
-            bigEarthPthLMDB_S1=config["bigEarthPthLMDB_S1"],
-            state='val',
-            train_csv=config["train_csv"],
-            val_csv=config["val_csv"],
-            test_csv=config["test_csv"]
+            bigEarthPthLMDB_S2=self.config["bigEarthPthLMDB_S2"],
+            bigEarthPthLMDB_S1=self.config["bigEarthPthLMDB_S1"],
+            state='test',
+            train_csv=self.config["train_csv"],
+            val_csv=self.config["val_csv"],
+            test_csv=self.config["test_csv"]
         )
-        self.query_dataloader = DataLoader(query_dataGen, config["batch_size"], num_workers=0, shuffle=False,
+        self.query_dataloader = DataLoader(query_dataGen, self.config["batch_size"], num_workers=0, shuffle=False,
                                            pin_memory=True)
-        self.archive_dataloader = DataLoader(archive_dataGen, config["batch_size"], num_workers=0, shuffle=False,
+        self.archive_dataloader = DataLoader(archive_dataGen, self.config["batch_size"], num_workers=0, shuffle=False,
                                              pin_memory=True)
 
         # features_path = os.path.join(self.config.dumps.features, self.config.suffix)
@@ -79,7 +79,7 @@ class Retrieval():
             self.prep_feature_extraction()
 
             ### restores weights loads model weights
-            self.restore_weigths(config["state_dict"])
+            self.restore_weigths(self.config["state_dict"])
         with torch.no_grad():
 
             if not os.path.isfile(self.query_feat_path):
@@ -100,12 +100,12 @@ class Retrieval():
                                 h_i, h_j, projection_i, projection_j = self.model(imgs_S1, imgs_S2)
                                 # projection_i and _j are the outputs after the mlp heads
 
-                                fused = get_fusion(config["fusion"], projection_i, projection_j)
+                                fused = get_fusion(self.config["fusion"], projection_i, projection_j)
 
                                 for name_S1, name_S2, label, feature in zip(query_batch['patch_name_S1'],
                                                                             query_batch['patch_name_S2'],
                                                                             labels.numpy(),
-                                                                            fused.detach().numpy()):
+                                                                            fused.cpu().detach().numpy()):
                                     query_patch_names.append((name_S1, name_S2))
                                     query_labels.append(label)
                                     query_features.append(feature)
@@ -130,17 +130,17 @@ class Retrieval():
                                 imgs_S1 = archive_batch["bands_S1"].to(self.device)
                                 imgs_S2 = archive_batch["bands_S2"].to(self.device)
 
-                                labels_a = archive_batch['labels'].to(self.device)
+                                labels_a = archive_batch['labels']
 
                                 h_i, h_j, projection_i_a, projection_j_a = self.model(imgs_S1, imgs_S2)
                                 # projection_i and _j are the outputs after the mlp heads
 
-                                fused_a = get_fusion(config["fusion"], projection_i_a, projection_j_a)
+                                fused_a = get_fusion(self.config["fusion"], projection_i_a, projection_j_a)
 
                                 for name_S1, name_S2, label_a, feature_a in zip(archive_batch['patch_name_S1'],
                                                                                 archive_batch['patch_name_S2'],
                                                                                 labels_a.numpy(),
-                                                                                fused_a.detach().numpy()):
+                                                                                fused_a.cpu().detach().numpy()):
                                     archive_patch_names.append((name_S1, name_S2))
                                     archive_labels.append(label_a)
                                     archive_features.append(feature_a)
@@ -163,7 +163,7 @@ class Retrieval():
             import ray
             from sklearn.metrics import pairwise_distances
             from tqdm import tqdm
-            num_cpus = 20  # psutil.cpu_count()
+            num_cpus = 10  # psutil.cpu_count()
 
             @ray.remote
             def calc_distance(query_feats, archive_feats):
@@ -298,7 +298,7 @@ class Retrieval():
                     del hf[key]
             distance = hf['distance']
             import psutil
-            num_cpus = 20  # psutil.cpu_count()
+            num_cpus = 10  # psutil.cpu_count()
             ray.init(num_cpus=num_cpus, object_store_memory=30 * 1024 * 1024 * 1024)
             result_ids = []
             process_thres = 1000
@@ -363,20 +363,26 @@ class Retrieval():
     def restore_weigths(self, state_dict_path):
 
         if torch.cuda.is_available():
-            self.model.load_state_dict(torch.load(state_dict_path)["state_dict"])
+            self.model.load_state_dict(torch.load(self.state_dict_path)["state_dict"])
 
         else:
-            self.model.load_state_dict(torch.load(state_dict_path, map_location=torch.device('cpu'))["state_dict"])
+            self.model.load_state_dict(torch.load(self.state_dict_path, map_location=torch.device('cpu'))["state_dict"])
         # self.model.neural_net = tf.keras.models.load_model(os.path.join(self.config.dumps.model_weights, self.config.suffix))
 
 
 if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description='Checking h5 metrics')
+    parser.add_argument('--filepath', metavar='PATH', help='path to the saved args.yaml')
+
+    args = parser.parse_args()
     prep_logger('retrieval.log')
     logger = get_logger()
 
     with timer_calc() as elapsed_time:
-        config = parse_config('/media/storagecube/markus/project/config/args.yaml')
-
+        #config = parse_config('/media/storagecube/markus/project/logs/Resnet50/separate_avg_adam/parameters.yaml')
+        config = parse_config(args.filepath)
         retrieval = Retrieval(config)
 
         retrieval.feature_extraction()
@@ -385,4 +391,4 @@ if __name__ == "__main__":
         retrieval.finish_retrieval()
         del retrieval
         del config
-        logger.info('Args.yaml is finished within {:0.2f} seconds'.format(elapsed_time()))
+        logger.info('Args is finished within {:0.2f} seconds'.format(elapsed_time()))
