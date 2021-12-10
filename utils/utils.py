@@ -7,6 +7,7 @@ import logging
 from contextlib import contextmanager
 from timeit import default_timer
 import yaml
+import argparse
 
 
 
@@ -178,6 +179,7 @@ def get_logger():
 
 
 def check_h5_metric(file):
+    print(file)
 
     hf = h5py.File(file, 'r')
     keys= list(hf.keys())
@@ -188,13 +190,11 @@ def check_h5_metric(file):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Checking h5 metrics')
+    parser.add_argument('--filepath', metavar='PATH', help='path to the saved retrieval h5.file')
 
-    import h5py
-    hf = h5py.File('C:/Users/Markus/Desktop/splits_mm_serbia/retrieval.h5', 'r')
-    keys = hf.keys()
-
-    out = np.array(hf['precision'])
-    print(out[0])
+    args = parser.parse_args()
+    check_h5_metric(args.filepath)
 
 
 

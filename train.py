@@ -176,4 +176,10 @@ def val(valloader, model, loss_func, epoch, val_writer, config, device):
 
 
 if __name__ == "__main__":
-    main("C:/Users/Markus/Desktop/project/config/args.yaml")
+    import argparse
+    parser = argparse.ArgumentParser(description='Checking h5 metrics')
+    parser.add_argument('--filepath', metavar='PATH', help='path to the saved args.yaml')
+
+    args = parser.parse_args()
+    main(args.filepath)
+    #main("C:/Users/Markus/Desktop/project/config/args.yaml")
