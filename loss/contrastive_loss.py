@@ -16,6 +16,15 @@ class NTxentLoss(nn.Module):
 
     def forward(self,modality_s1,modality_s2):
         """
+
+
+
+        modality_1: [batch_size, dim]
+        modality_2: [batch_size, dim]
+
+        # gather representations in case of distributed training
+        # modality_1_dist: [batch_size * world_size, dim]
+        # modality_2_dist: [batch_size * world_size, dim]
                Implementation taken from:
                https://github.com/PyTorchLightning/lightning-bolts/blob/master/pl_bolts/models/self_supervised/simclr/simclr_module.py
 
@@ -49,7 +58,7 @@ class NTxentLoss(nn.Module):
                :return: NTXent loss
                """
 
-        #print(torch.linalg.norm(modality_s1,dim = 1))
+
         modality_s1 = F.normalize(modality_s1)
         modality_s2 = F.normalize(modality_s2)
 
@@ -61,18 +70,22 @@ class NTxentLoss(nn.Module):
 
         cov = torch.mm(out, out.t().contiguous())
 
+        # cov and sim: [2 * batch_size, 2 * batch_size * world_size]
+        # neg: [2 * batch_size]
+        cov = torch.mm(out, out.t().contiguous())
         sim = torch.exp(cov / self.temperature)
         neg = sim.sum(dim=-1)
 
-        # from each row, subtract e^1 to remove similarity measure for x1.x1
-        row_sub = torch.Tensor(neg.shape).fill_(math.e).to(neg.device)
+        # from each row, subtract e^(1/temp) to remove similarity measure for x1.x1
+        row_sub = torch.Tensor(neg.shape).fill_(math.e ** (1 / self.temperature))
         neg = torch.clamp(neg - row_sub, min=self.eps)  # clamp for numerical stability
 
         # Positive similarity, pos becomes [2 * batch_size]
         pos = torch.exp(torch.sum(modality_s1 * modality_s2, dim=-1) / self.temperature)
         pos = torch.cat([pos, pos], dim=0)
 
-        loss = -torch.log(pos / (neg + self.eps)).sum()
+        loss = -torch.log(pos / (neg + self.eps)).mean()
+
         return loss
 
 
