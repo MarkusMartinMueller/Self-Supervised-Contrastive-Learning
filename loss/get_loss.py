@@ -6,9 +6,10 @@ import math
 from torch.nn import functional as F
 
 from loss import ClassificationLoss
+from loss import NTxentLoss
 
 
-def get_loss_func(name, projection_dim, fusion):
+def get_loss_func(name, projection_dim, fusion,temperature):
     if name == "classification":
 
         cls = ClassificationLoss(projection_dim=projection_dim, n_classes=19, fusion=fusion)
@@ -16,7 +17,7 @@ def get_loss_func(name, projection_dim, fusion):
         return cls
 
     elif name == "contrastive":
-        pass
+        nxt = NTxentLoss(temperature=temperature)
 
     else:
         raise ValueError('Invalid Loss function.')
