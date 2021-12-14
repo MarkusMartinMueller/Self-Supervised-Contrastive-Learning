@@ -25,7 +25,6 @@ scheduler_gamma: 0.9 # optional not used right now
 temperature: 0 # for NXT Loss
 
 
-
 # reload options
 state_dict: "/media/storagecube/markus/project/logs/MM_paper/joint_concat_adam/checkpoints_model_best.pth.tar" # set to the directory containing `checkpoint_##.tar`
 epoch_num: 100 # set to checkpoint number

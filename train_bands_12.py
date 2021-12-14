@@ -44,6 +44,7 @@ def main(filename):
     # val_writer = SummaryWriter(os.path.join(save_path, 'val'))
     ## tensorboard preparations
 
+
     ### data generation data loader preperation. you have to set alternative in dict_concat to True !!!!!!!!!!!!!! that the pipeline works
     train_dataGen = dataGenBigEarthLMDB_joint(
         bigEarthPthLMDB_S2=config["bigEarthPthLMDB_S2"],
