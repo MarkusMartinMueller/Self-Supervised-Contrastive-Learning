@@ -194,8 +194,10 @@ def interpolate(bands, img10_shape=[120, 120]):
     return torch.squeeze(bands_interpolated, 1)
 
 
-def dict_concat(sample_S1: dict, sample_S2: dict) -> dict:
+def dict_concat(sample_S1: dict, sample_S2: dict,alternativ = False) -> dict:
     """
+
+    alternativ is just used for the network with 12 bands input, ResNet Backbone and cls loss
     sample: dict with keys bands10,bands20, label
 
     :return:
@@ -210,13 +212,22 @@ def dict_concat(sample_S1: dict, sample_S2: dict) -> dict:
     bands_S2 = torch.cat((sample_S2[keys_S2[0]], sample_S2[keys_S2[1]]))
     bands_S1 = torch.cat((sample_S1[keys_S1[0]], sample_S1[keys_S1[1]]))
 
-    concat_dict["bands_S2"] = bands_S2
-    concat_dict["bands_S1"] = bands_S1
-    concat_dict["labels"] = sample_S2[keys_S2[2]]
-    concat_dict["patch_name_S1"] = sample_S1[keys_S1[3]]
-    concat_dict["patch_name_S2"] = sample_S2[keys_S2[3]]
+    if alternativ:
+        concat_dict["bands"] = torch.cat((bands_S2,bands_S1))
+        concat_dict["labels"] = sample_S2[keys_S2[2]]
+        concat_dict["patch_name_S1"] = sample_S1[keys_S1[3]]
+        concat_dict["patch_name_S2"] = sample_S2[keys_S2[3]]
+    else:
+        concat_dict["bands_S2"] = bands_S2
+        concat_dict["bands_S1"] = bands_S1
+        concat_dict["labels"] = sample_S2[keys_S2[2]]
+        concat_dict["patch_name_S1"] = sample_S1[keys_S1[3]]
+        concat_dict["patch_name_S2"] = sample_S2[keys_S2[3]]
 
     return concat_dict
+
+
+
 
 
 def loads_pyarrow(buf):
