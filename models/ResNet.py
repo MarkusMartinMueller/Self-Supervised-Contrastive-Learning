@@ -130,3 +130,35 @@ class ResNet50_joint(nn.Module):
         x = self.encoder(x)
 
         return x
+
+class ResNet50_bands_12(nn.Module):
+    """
+        ResNet 50 Encoder for 12 bands input
+        """
+    def __init__(self):
+        super(ResNet50_bands_12,self).__init__()
+
+        resnet = models.resnet50(pretrained=False)
+
+
+        self.conv1 = nn.Conv2d(12, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
+        self.encoder = nn.Sequential(
+            self.conv1,
+            resnet.bn1,
+            resnet.relu,
+            resnet.maxpool,
+            resnet.layer1,
+            resnet.layer2,
+            resnet.layer3,
+            resnet.layer4,
+            resnet.avgpool
+        )
+
+
+
+    def forward(self, x):
+        x = self.encoder(x)
+
+        ## output should be [batch_size,n_features]
+        x = torch.squeeze(x)
+        return x
