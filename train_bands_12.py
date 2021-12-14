@@ -23,7 +23,7 @@ from utils import get_scheduler
 from utils import get_optimizer
 from utils import save_checkpoint
 
-from models import get_model
+from models import get_model, ResNet50_bands_12
 from data import dataGenBigEarthLMDB_joint
 from loss import get_loss_func
 
@@ -71,7 +71,7 @@ def main(filename):
 
     ## model,optimizer, scheduler, loss_func initilization
 
-    model = get_model(config["type"], config["n_features"], config["projection_dim"], config["out_channels"])
+    model = ResNet50_bands_12()
     model.to(device)
 
     optimizer = get_optimizer(model, config["optimizer"], config["learning_rate"], config["weight_decay"])
