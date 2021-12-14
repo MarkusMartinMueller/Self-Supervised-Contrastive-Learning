@@ -38,7 +38,7 @@ class Config():
         "train_csv": "/media/storagecube/markus/splits_mm_serbia/train.csv",
         "val_csv": "/media/storagecube/markus/splits_mm_serbia/val.csv",
         'test_csv': "/media/storagecube/markus/splits_mm_serbia/test.csv",
-        'loss_func': "classification",
+        'loss_func': "Contrastive",
         'fusion': "concat",
         'bigEarthPthLMDB_S2': "/media/storagecube/markus/project/data/BigEarth_Serbia_Summer_S2.lmdb",
         'bigEarthPthLMDB_S1': "/media/storagecube/markus/project/data/BigEarth_Serbia_Summer_S1.lmdb",
@@ -54,7 +54,7 @@ class Config():
         'learning_rate': 0.001,
         'weight_decay': 0.0,
         'scheduler_gamma': 0.9, # optional not used right now
-        'temperature': 0 ,# for NXT Loss
+        'temperature': 0.1 ,# for NXT Loss
 
 
 
@@ -68,7 +68,7 @@ class Config():
 
         'logging_params':[{
           'save_dir': "logs/",
-          'name': "joint_concat", # maybe a special name
+          'name': "separate_concat_adam_contrastive", # maybe a special name
           'summaries': "summaries/",
           'suffix': ""}]
         }
@@ -83,7 +83,7 @@ class Config():
 
 
         ## change file path on erde
-        filepath = r"/media/storagecube/markus/project/config/args_{}_{}.yaml".format(contents['type'],contents['fusion'])
+        filepath = r"/media/storagecube/markus/project/config/args_{}_{}_{}.yaml".format(contents['type'],contents['fusion'],contents["loss_func"])
         with open(filepath, 'w') as file:  # create a new yaml file
             data = yaml.dump(DEFAULTS, file)
 
@@ -124,7 +124,7 @@ if __name__ == "__main__":
             config_dict = {
                 "type": type,
                 "fusion": fusion,
-                "state_dict": "/media/storagecube/markus/project/logs/Resnet50/{}_{}_adam/checkpoints_model_best.pth.tar".format(type,fusion),
+                "state_dict": "/media/storagecube/markus/project/logs/Resnet50/{}_{}_contrastive_adam/checkpoints_model_best.pth.tar".format(type,fusion),
                 'logging_params': {'save_dir': "logs/",
                                    'name': '{}_{}'.format(type,fusion),
                                    'summaries': "summaries/",
