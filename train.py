@@ -75,7 +75,7 @@ def main(filename):
 
     optimizer = get_optimizer(model, config["optimizer"], config["learning_rate"], config["weight_decay"])
     # scheduler = get_scheduler(optimizer, config["schedluer_gamma"]
-    loss_func = get_loss_func(config["loss_func"], config["projection_dim"], config["fusion"])
+    loss_func = get_loss_func(config["loss_func"], device,config["projection_dim"], config["fusion"],config["temperature"])
     loss_func.to(device)
 
     ## save params in yaml file
@@ -101,7 +101,7 @@ def main(filename):
                 }, checkpoint_dir)
 
                 min_val_loss = val_loss
-    train_writer.close()
+    #train_writer.close()
     # val_writer.close()
 
 
@@ -120,7 +120,11 @@ def train(model, trainloader, loss_func, optimizer, epoch, train_writer, config,
                                                      imgs_S2)  # projection_i and _j are the outputs after the mlp heads
 
         fused = get_fusion(config["fusion"], projection_i, projection_j)
-        loss = loss_func(fused, labels)
+
+        if config["loss_func"] == "classification":
+            loss = loss_func(fused, labels)
+        elif config["loss_func"] == "contrastive":
+            loss = loss_func(projection_i,projection_j)
 
         ### detach gradients
         optimizer.zero_grad()
@@ -160,7 +164,10 @@ def val(valloader, model, loss_func, epoch, val_writer, config, device):
             # projection_i and j are the outputs after the mlp heads
 
             fused = get_fusion(config["fusion"], projection_i, projection_j)
-            loss = loss_func(fused, labels)
+            if config["loss_func"] == "classification":
+                loss = loss_func(fused, labels)
+            elif config["loss_func"] == "contrastive":
+                loss = loss_func(projection_i, projection_j)
 
             loss_tracker.update(loss.item())
 
@@ -180,7 +187,7 @@ def val(valloader, model, loss_func, epoch, val_writer, config, device):
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(description='Checking h5 metrics')
+    parser = argparse.ArgumentParser(description='Yaml config path to train model')
     parser.add_argument('--filepath', metavar='PATH', help='path to the saved args.yaml')
 
     args = parser.parse_args()

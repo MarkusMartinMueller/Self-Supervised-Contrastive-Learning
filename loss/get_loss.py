@@ -9,7 +9,7 @@ from loss import ClassificationLoss
 from loss import NTxentLoss
 
 
-def get_loss_func(name, projection_dim, fusion,temperature):
+def get_loss_func(name, device,projection_dim, fusion,temperature):
     if name == "classification":
 
         cls = ClassificationLoss(projection_dim=projection_dim, n_classes=19, fusion=fusion)
@@ -17,7 +17,7 @@ def get_loss_func(name, projection_dim, fusion,temperature):
         return cls
 
     elif name == "contrastive":
-        nxt = NTxentLoss(temperature=temperature)
-
+        nxt = NTxentLoss(temperature=temperature,device=device)
+        return nxt
     else:
         raise ValueError('Invalid Loss function.')

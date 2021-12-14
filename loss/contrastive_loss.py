@@ -9,10 +9,12 @@ class NTxentLoss(nn.Module):
     """
        NTXent Loss (Normalized Temperature-scaled Cross-entropy Loss) .
     """
-    def __init__(self, temperature, eps=1e-6):
+
+    def __init__(self, temperature, device, eps=1e-6):
         super(NTxentLoss, self).__init__()
         self.temperature = temperature
         self.eps = eps
+        self.device = device
 
     def forward(self,modality_s1,modality_s2):
         """
@@ -77,7 +79,7 @@ class NTxentLoss(nn.Module):
         neg = sim.sum(dim=-1)
 
         # from each row, subtract e^(1/temp) to remove similarity measure for x1.x1
-        row_sub = torch.Tensor(neg.shape).fill_(math.e ** (1 / self.temperature))
+        row_sub = torch.Tensor(neg.shape).fill_(math.e ** (1 / self.temperature)).to(self.device)
         neg = torch.clamp(neg - row_sub, min=self.eps)  # clamp for numerical stability
 
         # Positive similarity, pos becomes [2 * batch_size]
