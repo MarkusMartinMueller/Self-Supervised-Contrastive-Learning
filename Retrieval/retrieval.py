@@ -121,7 +121,6 @@ class Retrieval():
                     self.logger.info('feature extraction is finished for query set within {:0.2f} seconds'.format(
                         elapsed_time_feat_ext()))
 
-
             if not os.path.isfile(self.archive_feat_path):
                 with timer_calc() as elapsed_time_feat_ext:
                     archive_patch_names = []
