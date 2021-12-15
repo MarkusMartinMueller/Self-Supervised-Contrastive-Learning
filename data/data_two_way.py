@@ -81,6 +81,8 @@ bands_std = {
 
 
 
+
+
 class dataGenBigEarthLMDB:
     """
         With this class you can generate data for one modality not for both, e.g. S1

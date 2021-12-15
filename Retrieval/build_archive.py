@@ -38,6 +38,7 @@ def build_db(filename, state_dict_path,state):
     else:
         model.load_state_dict(torch.load(state_dict_path, map_location=torch.device('cpu'))["state_dict"])
 
+
     retrieve_dataGen = dataGenBigEarthLMDB_joint(
         bigEarthPthLMDB_S2 = "C:/Users/Markus/Desktop/project/data/BigEarth_Serbia_Summer_S2.lmdb",
         bigEarthPthLMDB_S1="C:/Users/Markus/Desktop/project/data/BigEarth_Serbia_Summer_S1.lmdb",
@@ -51,7 +52,6 @@ def build_db(filename, state_dict_path,state):
 
     feature_dict = {}
     model.eval()
-
 
 
     with torch.no_grad():

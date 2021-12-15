@@ -19,7 +19,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=
                                      'This script creates TFRecord files for the BigEarthNet train, validation and test splits')
     parser.add_argument('-r1', '--root_folder_s1', dest='root_folder_s1',
-                        help='root folder path contains multiple patch folders')
+                        help='root folder 1 path contains  patch folders to sentinel 1')
     parser.add_argument('-r2', '--root_folder_s2', dest="root_folder_s2")
     parser.add_argument('-o', '--out_folder', dest='out_folder',
                         help='folder path containing resulting TFRecord or LMDB files')

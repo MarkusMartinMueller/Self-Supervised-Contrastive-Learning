@@ -189,6 +189,12 @@ def check_h5_metric(file):
         print("{} : {}".format(key,out))
 
 
+    if "average_precision" in keys:
+        for i in [8, 16, 32, 64, 128, 1000]:
+            print('mAP@{}(%) {}'.format(i, hf["average_precision"][i - 1] * 100))
+
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Checking h5 metrics')
     parser.add_argument('--filepath', metavar='PATH', help='path to the saved retrieval h5.file')

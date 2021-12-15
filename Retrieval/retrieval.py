@@ -15,7 +15,7 @@ import torch
 from torch.utils.data import DataLoader
 
 from utils import get_fusion, parse_config, prep_logger, get_logger, timer_calc, get_shuffle_buffer_size
-from models import get_model
+from models import get_model, ResNet50_bands_12
 from data import dataGenBigEarthLMDB_joint
 
 
@@ -42,6 +42,7 @@ class Retrieval():
 
         self.model = get_model(self.config["type"], self.config["n_features"], self.config["projection_dim"],
                                self.config["out_channels"])
+
         self.model.to(self.device)
 
         query_dataGen = dataGenBigEarthLMDB_joint(
@@ -65,16 +66,14 @@ class Retrieval():
         self.archive_dataloader = DataLoader(archive_dataGen, self.config["batch_size"], num_workers=0, shuffle=False,
                                              pin_memory=True)
 
-        # features_path = os.path.join(self.config.dumps.features, self.config.suffix)
-        # if not os.path.isdir(features_path):
-        # os.makedirs(features_path)
-
     def finish_retrieval(self):
         self.summary_writer.close()
         self.logger.info('Retrieval is finished')
 
     def feature_extraction(self):
+
         self.logger.info('feature extraction is started')
+
         if (not os.path.isfile(self.query_feat_path)) or (not os.path.isfile(self.archive_feat_path)):
             self.prep_feature_extraction()
 
@@ -102,6 +101,7 @@ class Retrieval():
 
                                 fused = get_fusion(self.config["fusion"], projection_i, projection_j)
 
+                                # Store all the results in the output file.
                                 for name_S1, name_S2, label, feature in zip(query_batch['patch_name_S1'],
                                                                             query_batch['patch_name_S2'],
                                                                             labels.numpy(),
@@ -112,6 +112,8 @@ class Retrieval():
 
                                 self.logger.info('a batch of query features is extracted within {:0.2f} seconds'.format(
                                     elapsed_time()))
+
+                        # Create the output arrays in the HDF5 file.
                         hf.create_dataset('feature', data=query_features)
                         hf.create_dataset('label', data=query_labels)
                         hf.create_dataset('patch_name', data=query_patch_names,
@@ -147,6 +149,7 @@ class Retrieval():
                                 self.logger.info(
                                     'a batch of archive features is extracted within {:0.2f} seconds'.format(
                                         elapsed_time()))
+                        # Create the output arrays in the HDF5 file.
                         hf.create_dataset('feature', data=archive_features)
                         hf.create_dataset('label', data=archive_labels)
                         hf.create_dataset('patch_name', data=archive_patch_names,
@@ -158,6 +161,7 @@ class Retrieval():
         self.logger.info('retrieval is started')
 
         if not os.path.isfile(self.retrieval_path):
+
             import numpy as np
             import psutil
             import ray
@@ -167,11 +171,31 @@ class Retrieval():
 
             @ray.remote
             def calc_distance(query_feats, archive_feats):
+                """
+                Calculates the distances between query and archive features in a highly parallelized fashion.
+
+                Args:
+                    query_features (np.array): the current batch of features from query images.
+                    archive_features (np.array): the current batch of features from archive images.
+                    metric (callable): the metric to decide the distance between features.
+                """
+
                 ## _feats created by np.array(hf['feature'])
                 return pairwise_distances(query_feats, archive_feats,
                                           metric=lambda u, v: 0.5 * np.sum(((u - v) ** 2) / (u + v + 1e-10)))
 
             def batch_with_index(iterable, n=1):
+                """
+                Returns batches of the given data in the specified size and also the range.
+
+                Args:
+                    iterable (obj): the data that will be split into batches.
+                    n (int): the batch size.
+
+                Returns:
+                    tuple(batch, range): tuples of the batch and respective range.
+                """
+
                 l = len(iterable)
                 for ndx in range(0, l, n):
                     # yield returns a generator, which you can only iterate over once
@@ -195,17 +219,30 @@ class Retrieval():
                     retrieval_res_ds = hf.create_dataset('retrieval_result', (len(query_feats), len(archive_feats)),
                                                          dtype='int32')
                     pbar = tqdm(total=int(np.floor(len(query_feats) / float(BATCH_SIZE))))
+
+                    # Iterate over the query data in batches
                     for query_batch, query_batch_idx in batch_with_index(query_feats, BATCH_SIZE):
+                        # object_store_memory calculates the used memory in GB.
+                        # Initialize the parallel computation.
                         ray.init(num_cpus=num_cpus, object_store_memory=30 * 1024 * 1024 * 1024)
+
+                        # This will contain the ids of the processes keeping the final results.
                         result_ids = []
+
+                        # Iterate over the archive data in batches.
                         for archive_batch, archive_batch_idx in batch_with_index(archive_feats, BATCH_SIZE):
                             ## calc_distance uses ray.remote
                             result_ids.append(calc_distance.remote(query_batch, archive_batch))
+
+                        # Get the results from the processes.
                         distance_batch = ray.get(result_ids)
                         distance_batch = np.concatenate(distance_batch, axis=1)
                         distance_ds[query_batch_idx] = distance_batch
+                        # Store the indices of the all images.
                         retrieval_res_ds[query_batch_idx] = np.argsort(distance_batch, axis=-1)
                         pbar.update(1)
+
+                        # Clean up resources before next run.
                         del result_ids
                         del distance_batch
                         ray.shutdown()
@@ -363,17 +400,17 @@ class Retrieval():
     def restore_weigths(self, state_dict_path):
 
         if torch.cuda.is_available():
+
             self.model.load_state_dict(torch.load(self.state_dict_path)["state_dict"])
 
         else:
             self.model.load_state_dict(torch.load(self.state_dict_path, map_location=torch.device('cpu'))["state_dict"])
-        # self.model.neural_net = tf.keras.models.load_model(os.path.join(self.config.dumps.model_weights, self.config.suffix))
 
 
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(description='Checking h5 metrics')
+    parser = argparse.ArgumentParser(description='Retrieval')
     parser.add_argument('--filepath', metavar='PATH', help='path to the saved args.yaml')
 
     args = parser.parse_args()
@@ -381,7 +418,7 @@ if __name__ == "__main__":
     logger = get_logger()
 
     with timer_calc() as elapsed_time:
-        #config = parse_config('/media/storagecube/markus/project/logs/Resnet50/separate_avg_adam/parameters.yaml')
+        # config = parse_config('/media/storagecube/markus/project/logs/Resnet50/separate_avg_adam/parameters.yaml')
         config = parse_config(args.filepath)
         retrieval = Retrieval(config)
 

@@ -34,13 +34,16 @@ from loss import get_loss_func
 
 
 def test(filename,archive_path):
-    save_path = os.path.join(config['logging_params']['save_dir'], config['name'],
-                             config['logging_params']['name'])
-    print('saving file name is ', save_path)
+
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     print("Using {} device".format(device))
 
     config = parse_config(filename)
+
+    save_path = os.path.join(config['logging_params']['save_dir'], config['name'],
+                             config['logging_params']['name'])
+    print('saving file name is ', save_path)
+
     ### data generation data loader preperation
     train_dataGen = dataGenBigEarthLMDB_joint(
         bigEarthPthLMDB_S2=config["bigEarthPthLMDB_S2"],
