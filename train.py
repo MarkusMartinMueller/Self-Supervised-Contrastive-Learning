@@ -8,7 +8,7 @@ from datetime import datetime
 from tensorboardX import SummaryWriter
 import os
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "3"
+
 # local imports
 
 
