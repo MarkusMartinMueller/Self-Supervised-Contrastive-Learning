@@ -123,7 +123,7 @@ class ResNet50_joint(nn.Module):
             x = self.conv_SAR(x)  # 1x1 convolution to adjust channel size
 
         elif input_channels == 10:
-            x = x = self.conv_RGB(x)
+            x = self.conv_RGB(x)
 
         # conv1 = Conv1(input_channels,out_channels =self.out_channels)
 
