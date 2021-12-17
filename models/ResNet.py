@@ -79,7 +79,7 @@ class Conv1(nn.Module):
 
         self.in_channels = in_channels
         self.out_channels = out_channels
-        self.conv = nn.Conv2d(self.in_channels, self.out_channels, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        self.conv = nn.Conv2d(self.in_channels, self.out_channels, kernel_size=(1, 1), stride=(1, 1), padding=(0, 0))#kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
 
     def forward(self, x):
 
@@ -123,7 +123,7 @@ class ResNet50_joint(nn.Module):
             x = self.conv_SAR(x)  # 1x1 convolution to adjust channel size
 
         elif input_channels == 10:
-            x = self.conv_RGB(x)
+            x = x = self.conv_RGB(x)
 
         # conv1 = Conv1(input_channels,out_channels =self.out_channels)
 
