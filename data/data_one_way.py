@@ -2,7 +2,6 @@ import numpy as np
 import torch
 import lmdb
 import csv
-import pyarrow as pa
 import torchvision.transforms as transforms
 import pickle
 from skimage import transform
@@ -154,7 +153,7 @@ class dataGenBigEarthLMDB_joint:
 
 
         # Load S2 bytflow and create upsampled S2 dictionary
-        bands10, bands20, _, multiHots = loads_pyarrow(byteflow_S2) #pickle.loads(byteflow_S2)
+        bands10, bands20, _, multiHots = pickle.loads(byteflow_S2)
 
         sample_S2 = {'bands10': bands10.astype(np.float32), 'bands20': bands20.astype(np.float32),
                      'label': multiHots.astype(np.float32), 'patch_name': patch_name[0]}
@@ -166,7 +165,7 @@ class dataGenBigEarthLMDB_joint:
         # sample['bands20'] = interp_band(bands20).astype(np.float32)
         # sample = to_tensor(sample)
 
-        vv, vh, multiHots = loads_pyarrow(byteflow_S1) #pickle.loads(byteflow_S1)
+        vv, vh, multiHots = pickle.loads(byteflow_S1)
         sample_S1 = {'vv': vv.astype(np.float32), 'vh': vh.astype(np.float32),
                      'label': multiHots.astype(np.float32),  'patch_name': patch_name[1]}
 
@@ -230,12 +229,7 @@ def dict_concat(sample_S1: dict, sample_S2: dict,alternativ = False) -> dict:
 
 
 
-def loads_pyarrow(buf):
-    """
-    Args:
-        buf: the output of `dumps`.
-    """
-    return pa.deserialize(buf)
+
 
 
 class Normalize(object):
