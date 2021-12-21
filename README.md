@@ -49,7 +49,7 @@ To specify your training and login parameters yaml config files are used. A conf
 
 <strong>Important note:</strong> 
 
-If you want to run training with different parameters , you always have to change `logging_params/name` and `state_dict` accordingly.<p>
+If you want to run training with different parameters , you <strong>always have to change</strong> `logging_params/name` and `state_dict` accordingly.<p>
 E.g. In `logging_params/name` <strong> joint_concat_sgd</strong> is changed to <strong>joint_concat_adam</strong> then `state_dict` has to be changed to "/media/storagecube/markus/project/logs/test/<strong>joint_concat_adam</strong>/checkpoints_model_best.pth.tar"  </p>
 
 
@@ -60,6 +60,8 @@ The script `project/retrieval.py` is for retrieval task . This file expects the 
 
 * `--filepath` : path to the saved parameters.yaml file, e.g. /media/storagecube/markus/project/logs/test/joint_concat_sgd/parameters.yaml
 
+
+<strong>Some bugs in multi_train_retrieval, I am going to fix that tomorrow morning</strong> <p>
 The script `project/multi_train_retrieval.py` is for training and retrieval task for multiple fusion and model tye parameters . This file expects the following parameters:
 
 * `loss_func`: Loss Function for the training
@@ -72,7 +74,7 @@ In the class Config() are <strong>Default values </strong>, which can be changed
 # Metrics 
 
 The script `utils/utils.py` is for checking the metrics . This file expects the following parameters:
-* `--filepath` : path to the saved parameters.yaml file, e.g. /media/storagecube/markus/project/logs/test/joint_concat_sgd/parameters.yaml
+* `--filepath` : path to the saved retrieval.h5 file, e.g. /media/storagecube/markus/project/logs/test/joint_concat_sgd/retrieval.h5
 At the moment precision, recall (for both the first 10 values) and map are shown. To change that only does are shown you have to  comment line 189: 
 
         if key == "precision" or key == "recall":
@@ -81,3 +83,6 @@ At the moment precision, recall (for both the first 10 values) and map are shown
 
         out = np.array(hf[key])[:10]  # change 10 to desired number up to 1000
 
+# Shell
+
+You can adjust the paths in run.sh and execute the shell programm.

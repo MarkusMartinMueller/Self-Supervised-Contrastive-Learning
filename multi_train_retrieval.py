@@ -89,24 +89,24 @@ def train_retrieval(config_dict):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Mutlti-Retrieval')
+    #parser = argparse.ArgumentParser(description='Mutlti-Retrieval')
     #parser.add_argument('--folder_name', metavar='PATH',
                         #help='folder where the model checkpoints are saved, which is a sub-directory of logs')
-    parser.add_argument('--loss_func', metavar='PATH', help='Loss function used for  training',
-                        choices=['classification', 'contrastive'])
+    #parser.add_argument('--loss_func', metavar='PATH', help='Loss function used for  training',
+                        #choices=['classification', 'contrastive'])
 
-    args = parser.parse_args()
+    #args = parser.parse_args()
     for typ in ['joint', 'separate']:
         for fusion in ['avg', 'max', 'sum', 'concat']:
             config_dict = {
-            "loss_func": "{}".format(args.loss_func),
+            #"loss_func": "{}".format(args.loss_func),
             #"name": "{}".format(args.folder_name),  # to save logs for test in an specific folder which is sub directory of logs
             "type": typ,
             "fusion": fusion,
             "state_dict": "/media/storagecube/markus/project/logs/{}/{}_{}_adam/checkpoints_model_best.pth.tar".format(typ, fusion),
                 #args.folder_name, typ, fusion),
             'logging_params': {'save_dir': "logs/",
-                               'name': '{}_{}_adam_{}'.format(typ, fusion,args.loss_func),
+                               'name': '{}_{}_adam'.format(typ, fusion),
                                }
             }
             train_retrieval(config_dict)

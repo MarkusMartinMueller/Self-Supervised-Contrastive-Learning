@@ -1,45 +1,44 @@
 # train options
-
 batch_size: 256
 start_epoch: 0
-epochs: 2
+epochs: 100
 pretrain: False
-type: "separate" # in the supervised setting, decision between joint or separate model
-train_csv: "C:/Users/Markus/Desktop/splits_mm_serbia/train.csv"
-val_csv: "C:/Users/Markus/Desktop/splits_mm_serbia/val.csv"
-test_csv: "C:/Users/Markus/Desktop/splits_mm_serbia/test.csv"
+type: "joint" # in the supervised setting, decision between joint or separate model
+train_csv: "/media/storagecube/markus/splits_mm_serbia/train.csv"
+val_csv: "/media/storagecube/markus/splits_mm_serbia/val.csv"
+test_csv: "/media/storagecube/markus/splits_mm_serbia/test.csv"
 loss_func: "classification"
-fusion: "avg"
-
-
-bigEarthPthLMDB_S2: "C:/Users/Markus/Desktop/project/data/BigEarth_Serbia_Summer_S2.lmdb"
-bigEarthPthLMDB_S1: "C:/Users/Markus/Desktop/project/data/BigEarth_Serbia_Summer_S1.lmdb"
+fusion: "concat"
+bigEarthPthLMDB_S2: "/media/storagecube/markus/project/data/BigEarth_Serbia_Summer_S2.lmdb"
+bigEarthPthLMDB_S1: "/media/storagecube/markus/project/data/BigEarth_Serbia_Summer_S1.lmdb"
+num_cpu: 10
 
 # model options
-name: "Resnet50"
+name: "test"
 n_features: 2048  # features after the resnet 50 layer
-projection_dim: 128 # "[...] to project the representation to a n-dimensional latent space"
+projection_dim: 128 # in this case needed for the classification loss fc layer
 out_channels: 32 # only used in joint mode for the Resnet model out-channels coming from Conv1
 
 # loss options
-optimizer: "sgd"
-learning_rate: 0.003
+optimizer: "adam"
+learning_rate: 0.001
 weight_decay: 0.0
-scheduler_gamma: 0.9
-temperature: 0 # for NXT Loss
-
+scheduler: False # optional not used right now
+temperature: 0.1 # for NXT Loss
 
 
 # reload options
-state_dict:  # set to the directory containing `checkpoint_##.tar`
-epoch_num: 100 # set to checkpoint number
-reload: False
+state_dict: "/media/storagecube/markus/project/logs/test/joint_concat_adam/checkpoints_model_best.pth.tar" # set to the directory containing `checkpoint_##.tar`
+
 
 
 ## logging options
 
 logging_params:
   save_dir: "logs/"
-  name: "test" # maybe a special name
-  summaries: ".../summaries/"
-  suffix: ""
+  name: "joint_concat_adam" # maybe a special name
+  
+
+
+
+### change fusion, loggin_params, and !!!!!!!!!!! state_dict!!!!!!!!
