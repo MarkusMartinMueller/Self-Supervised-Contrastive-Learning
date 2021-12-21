@@ -17,7 +17,6 @@ class Config():
             "batch_size": 256,
             "start_epoch": 0,
             "epochs": 50,
-            "pretrain": False,
             "type": "",  # in the supervised setting, decision between joint or separate model
             "train_csv": "/media/storagecube/markus/splits_mm_serbia/train.csv",
             "val_csv": "/media/storagecube/markus/splits_mm_serbia/val.csv",
@@ -26,9 +25,10 @@ class Config():
             'fusion': "",
             'bigEarthPthLMDB_S2': "/media/storagecube/markus/project/data/BigEarth_Serbia_Summer_S2.lmdb",
             'bigEarthPthLMDB_S1': "/media/storagecube/markus/project/data/BigEarth_Serbia_Summer_S1.lmdb",
+            "num_cpu": 10,
 
             # model options
-            'name': "Resnet50",
+            'name': "",
             'n_features': 2048,  # features after the resnet 50 layer
             'projection_dim': 128,  # "[...] to project the representation to a n-dimensional latent space"
             'out_channels': 32,  # only used in joint mode for the Resnet model out-channels coming from Conv1
@@ -37,19 +37,19 @@ class Config():
             'optimizer': "adam",
             'learning_rate': 0.0001,
             'weight_decay': 0.0,
-            'scheduler_gamma': 0.9,  # optional not used right now
+            'scheduler': False,  # optional not used right now
             'temperature': 0,  # for NXT Loss
-
-            # reload options
-            'state_dict': "",  # set to the directory containing `checkpoint_##.tar`
 
             ## logging options
 
             'logging_params': [{
                 'save_dir': "logs/",
                 'name': "",  # maybe a special name
-                'summaries': "summaries/",
-                'suffix': ""}]
+            }],
+
+            # reload options
+            'state_dict': "",  # set to the directory containing `checkpoint_##.tar`
+
         }
 
         for key in list(contents):
@@ -100,8 +100,8 @@ if __name__ == "__main__":
     for typ in ['joint', 'separate']:
         for fusion in ['avg', 'max', 'sum', 'concat']:
             config_dict = {
-            "loss_func": args.loss_func,
-            "name": args.folder_name,  # to save logs for test in an specific folder which is sub directory of logs
+            "loss_func": "{}".format(args.loss_func),
+            "name": "{}".format(args.folder_name),  # to save logs for test in an specific folder which is sub directory of logs
             "type": typ,
             "fusion": fusion,
             "state_dict": "/media/storagecube/markus/project/logs/{}/{}_{}_adam/checkpoints_model_best.pth.tar".format(
