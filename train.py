@@ -94,7 +94,7 @@ def main(filename):
         print('Epoch {}/{}'.format(epoch + 1, config["epochs"]))
         print('-' * 10)
 
-        train(model, train_data_loader, loss_func, optimizer, epoch, train_writer, config, device)
+        train(model, train_data_loader, loss_func, optimizer, scheduler,epoch, train_writer, config, device)
 
         if epoch % 2 == 0:
 
