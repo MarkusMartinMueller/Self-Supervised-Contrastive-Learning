@@ -74,7 +74,7 @@ def main(filename):
     model.to(device)
 
     optimizer = get_optimizer(model, config["optimizer"], config["learning_rate"], config["weight_decay"])
-    scheduler = get_scheduler(optimizer, config["scheduler_gamma"], config["learning_rate"], config["epochs"],
+    scheduler = get_scheduler(optimizer, config["scheduler"], config["learning_rate"], config["epochs"],
                               train_data_loader)
     loss_func = get_loss_func(config["loss_func"], device,config["projection_dim"], config["fusion"],config["temperature"])
     loss_func.to(device)
