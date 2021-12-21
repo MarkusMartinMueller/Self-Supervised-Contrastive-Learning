@@ -61,7 +61,7 @@ The script `project/retrieval.py` is for retrieval task . This file expects the 
 * `--filepath` : path to the saved parameters.yaml file, e.g. /media/storagecube/markus/project/logs/test/joint_concat_sgd/parameters.yaml
 
 The script `project/multi_train_retrieval.py` is for training and retrieval task for multiple fusion and model tye parameters . This file expects the following parameters:
-* `folder_name`: directory where the model checkpoints are saved, which is a sub-directory of logs, e.g. "test"
+
 * `loss_func`: Loss Function for the training
 
 `multi_train_retrieval.py` creates config yaml files on the fly and saves them in `config/` directory. <p>
