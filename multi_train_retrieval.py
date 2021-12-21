@@ -28,7 +28,7 @@ class Config():
             "num_cpu": 10,
 
             # model options
-            'name': "",
+            'name': "test",
             'n_features': 2048,  # features after the resnet 50 layer
             'projection_dim': 128,  # "[...] to project the representation to a n-dimensional latent space"
             'out_channels': 32,  # only used in joint mode for the Resnet model out-channels coming from Conv1
@@ -90,8 +90,8 @@ def train_retrieval(config_dict):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Mutlti-Retrieval')
-    parser.add_argument('--folder_name', metavar='PATH',
-                        help='folder where the model checkpoints are saved, which is a sub-directory of logs')
+    #parser.add_argument('--folder_name', metavar='PATH',
+                        #help='folder where the model checkpoints are saved, which is a sub-directory of logs')
     parser.add_argument('--loss_func', metavar='PATH', help='Loss function used for  training',
                         choices=['classification', 'contrastive'])
 
@@ -100,11 +100,11 @@ if __name__ == "__main__":
         for fusion in ['avg', 'max', 'sum', 'concat']:
             config_dict = {
             "loss_func": "{}".format(args.loss_func),
-            "name": "{}".format(args.folder_name),  # to save logs for test in an specific folder which is sub directory of logs
+            #"name": "{}".format(args.folder_name),  # to save logs for test in an specific folder which is sub directory of logs
             "type": typ,
             "fusion": fusion,
-            "state_dict": "/media/storagecube/markus/project/logs/{}/{}_{}_adam/checkpoints_model_best.pth.tar".format(
-                args.folder_name, typ, fusion),
+            "state_dict": "/media/storagecube/markus/project/logs/{}/{}_{}_adam/checkpoints_model_best.pth.tar".format(typ, fusion),
+                #args.folder_name, typ, fusion),
             'logging_params': {'save_dir': "logs/",
                                'name': '{}_{}_adam_{}'.format(typ, fusion,args.loss_func),
                                }
