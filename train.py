@@ -74,7 +74,8 @@ def main(filename):
     model.to(device)
 
     optimizer = get_optimizer(model, config["optimizer"], config["learning_rate"], config["weight_decay"])
-    # scheduler = get_scheduler(optimizer, config["schedluer_gamma"]
+    scheduler = get_scheduler(optimizer, config["scheduler_gamma"], config["learning_rate"], config["epochs"],
+                              train_data_loader)
     loss_func = get_loss_func(config["loss_func"], device,config["projection_dim"], config["fusion"],config["temperature"])
     loss_func.to(device)
 
@@ -82,6 +83,12 @@ def main(filename):
     save_params(config)
 
     min_val_loss = math.inf
+
+    #pretrained = True
+    #if pretrained:
+        #print("=> loading checkpoint '{}'".format(torch.load(config["state_dict"])["epoch"]))
+        #model.load_state_dict(torch.load(config["state_dict"])["state_dict"])
+        #optimizer.load_state_dict(torch.load(config["state_dict"])["optimizer"])
 
     for epoch in range(config["start_epoch"], config["epochs"]):
         print('Epoch {}/{}'.format(epoch + 1, config["epochs"]))
@@ -105,7 +112,7 @@ def main(filename):
     # val_writer.close()
 
 
-def train(model, trainloader, loss_func, optimizer, epoch, train_writer, config, device):
+def train(model, trainloader, loss_func, optimizer, scheduler,epoch, train_writer, config, device):
     loss_tracker = MetricTracker()
 
     model.train()
@@ -130,6 +137,8 @@ def train(model, trainloader, loss_func, optimizer, epoch, train_writer, config,
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
+        if config['scheduler']:
+            scheduler.step()
 
         loss_tracker.update(loss.item())
 
@@ -192,4 +201,4 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     main(args.filepath)
-    # main("C:/Users/Markus/Desktop/project/config/args.yaml")
+    #main("C:/Users/Markus/Desktop/project/config/args.yaml")
