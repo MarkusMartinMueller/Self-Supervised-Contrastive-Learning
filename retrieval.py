@@ -418,7 +418,7 @@ if __name__ == "__main__":
     logger = get_logger()
 
     with timer_calc() as elapsed_time:
-        # config = parse_config('/media/storagecube/markus/project/logs/Resnet50/separate_avg_adam/parameters.yaml')
+        #config = parse_config('/logs/Resnet50/joint_concat_adam_contrastive/parameters.yaml')
         config = parse_config(args.filepath)
         retrieval = Retrieval(config)
 
