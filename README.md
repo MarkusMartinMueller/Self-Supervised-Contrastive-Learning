@@ -63,9 +63,19 @@ The script `project/multi_train_retrieval.py` is for training and retrieval task
 * `loss_func`: Loss Function for the training
 
 `multi_train_retrieval.py` creates config yaml files on the fly and saves them in `config/` directory. <p>
-in the class Config() are <strong>Default values </strong>, which can be changed before runnig the file.
+In the class Config() are <strong>Default values </strong>, which can be changed before running the file.
+
+
 
 # Metrics 
 
 The script `utils/utils.py` is for checking the metrics . This file expects the following parameters:
 * `--filepath` : path to the saved parameters.yaml file, e.g. /media/storagecube/markus/project/logs/test/joint_concat_sgd/parameters.yaml
+At the moment precision, recall (for both the first 10 values) and map are shown. To change that only does are shown you have to  comment line 189: 
+
+        if key == "precision" or key == "recall":
+
+        or change line 190:
+
+        out = np.array(hf[key])[:10]  # change 10 to desired number up to 1000
+
