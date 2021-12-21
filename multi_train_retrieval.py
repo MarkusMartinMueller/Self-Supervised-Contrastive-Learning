@@ -89,7 +89,6 @@ def train_retrieval(config_dict):
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser(description='Mutlti-Retrieval')
     parser.add_argument('--folder_name', metavar='PATH',
                         help='folder where the model checkpoints are saved, which is a sub-directory of logs')
