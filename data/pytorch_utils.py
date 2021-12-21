@@ -298,7 +298,7 @@ class dataGenBigEarthTiff:
         elif self.vv is not None and self.vh is not None:
 
             sample = {'vv': vv_array, 'vh': vh_array,
-                      'patch_name': imgNm[0][:end]+"_S1"+ imgNm[0][end:], 'multi_hots_n': newMultiHots, 'multi_hots_o': oldMultiHots}
+                      'patch_name': imgNm[1], 'multi_hots_n': newMultiHots, 'multi_hots_o': oldMultiHots}
 
         return sample
 
