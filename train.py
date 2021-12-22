@@ -63,8 +63,8 @@ def main(filename):
         test_csv=config["test_csv"]
     )
 
-    train_data_loader = DataLoader(train_dataGen, config["batch_size"], num_workers=0, shuffle=True, pin_memory=True)
-    val_data_loader = DataLoader(val_dataGen, config["batch_size"], num_workers=0, shuffle=True, pin_memory=True)
+    train_data_loader = DataLoader(train_dataGen, config["batch_size"], num_workers=4, shuffle=True, pin_memory=True)
+    val_data_loader = DataLoader(val_dataGen, config["batch_size"], num_workers=4, shuffle=True, pin_memory=True)
 
     ### data generation data loader preperation
 
