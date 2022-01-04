@@ -167,7 +167,7 @@ class Retrieval():
             import ray
             from sklearn.metrics import pairwise_distances
             from tqdm import tqdm
-            num_cpus = 10  # psutil.cpu_count()
+            num_cpus = self.config(["num_cpu"])  # psutil.cpu_count()
 
             @ray.remote
             def calc_distance(query_feats, archive_feats):
@@ -335,7 +335,7 @@ class Retrieval():
                     del hf[key]
             distance = hf['distance']
             import psutil
-            num_cpus = 10  # psutil.cpu_count()
+            num_cpus = self.config(["num_cpu"])  # psutil.cpu_count()
             ray.init(num_cpus=num_cpus, object_store_memory=30 * 1024 * 1024 * 1024)
             result_ids = []
             process_thres = 1000
