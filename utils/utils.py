@@ -8,6 +8,7 @@ from contextlib import contextmanager
 from timeit import default_timer
 import yaml
 import argparse
+import h5py
 
 
 
