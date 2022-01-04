@@ -186,7 +186,7 @@ def interpolate(bands, img10_shape=[120, 120]):
 
     """
 
-    bands = torch.unsqueeze(bands, 1)  # input for bicubic must be 4 dimensional
+    bands = torch.unsqueeze(bands, 1)  # input for bicubic must be 4 dimensional, e.g. from (6,60,60) to (6,1,60,60)
 
     bands_interpolated = torch.nn.functional.interpolate(bands, [120, 120], mode="bicubic")
 
@@ -269,10 +269,10 @@ class Normalize(object):
             vh_norm = np.zeros((1, 120, 120), np.float32)
 
             for idx, (t, m, s) in enumerate(zip(vv, self.vv_mean, self.vv_std)):
-                vv_norm[idx] = (t - m) / s
+                vv_norm[idx] = np.divide(np.subtract(t, m), s)
 
             for idx, (t, m, s) in enumerate(zip(vh, self.vh_mean, self.vh_std)):
-                vh_norm[idx] = (t - m) / s
+                vh_norm[idx] = np.divide(np.subtract(t, m), s)
 
             return {'vv': vv_norm, 'vh': vh_norm, 'label': label, 'patch_name': patch_name}
 
