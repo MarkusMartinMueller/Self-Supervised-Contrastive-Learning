@@ -89,7 +89,7 @@ def train_retrieval(config_dict):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Mutlti-Retrieval')
+    parser = argparse.ArgumentParser(description='Multi-Retrieval')
 
     parser.add_argument('--loss_func', metavar='PATH', help='Loss function used for  training',
                         choices=['classification', 'contrastive'])
