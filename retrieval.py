@@ -23,10 +23,7 @@ class Retrieval():
     def __init__(self, config):
         self.config = config
         self.logger = get_logger()
-        self.summary_writer = tf.summary.create_file_writer(
-            os.path.join(os.path.join(self.config['logging_params']['save_dir'], self.config['name'],
-                                      self.config['logging_params']['name']),
-                         self.config['logging_params']['summaries'], self.config['logging_params']['suffix']))
+
 
         self.query_feat_path = os.path.join(self.config['logging_params']['save_dir'], self.config['name'],
                                             self.config['logging_params']['name'], 'query.h5')
@@ -67,7 +64,7 @@ class Retrieval():
                                              pin_memory=True)
 
     def finish_retrieval(self):
-        self.summary_writer.close()
+        #self.summary_writer.close()
         self.logger.info('Retrieval is finished')
 
     def feature_extraction(self):
