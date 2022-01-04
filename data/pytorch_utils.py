@@ -263,12 +263,7 @@ class dataGenBigEarthTiff:
                     read_scale_raster(os.path.join(self.Dir, imgNm[0], imgNm[0] + '_B' + band + '.tif'),
                                       self.GDAL_EXISTED, self.RASTERIO_EXISTED))
 
-        """
-                 the csv files in the current directory have different names than S1 Files 
 
-                
-                An adjustment happens via imgNm[0][:end]+"_S1"+ imgNm[0][end:]
-        """
 
         if self.vv is not None:
             vv_array.append(
