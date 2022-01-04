@@ -12,7 +12,6 @@ from torch import nn
 # local imports
 from models import ResNet50_S1, ResNet50_S2, ResNet50_joint
 from data import dataGenBigEarthLMDB_joint
-# from data import dataGenBigEarthLMDB
 from utils import fusion_concat, fusion_avg, fusion_sum, fusion_max
 from loss import ClassificationLoss, NTxentLoss
 
@@ -124,74 +123,50 @@ if __name__ == "__main__":
     )
     train_data_loader = DataLoader(train_dataGen, batch_size=64, num_workers=0, shuffle=False, pin_memory=False)
 
-    #image = next(iter(train_data_loader))
+    image = next(iter(train_data_loader))
 
 
     #inputs = image["bands"]
-    #inputs_s1 = image["bands_S1"]
-    #inputs_s2 = image["bands_S2"]
-    #labels = image['labels']
-    net = get_model(path_type="separate", n_features=2048, projection_dim=128, out_channels=32)
-    query_patch_names = []
-    query_labels = []
-    query_features = []
-
-    for query_batch_id, query_batch in enumerate(train_data_loader):
+    inputs_s1 = image["bands_S1"]
+    inputs_s2 = image["bands_S2"]
+    labels = image['labels']
+    net = get_model(path_type="joint", n_features=2048, projection_dim=128, out_channels=32)
 
 
-                imgs_S1 = query_batch["bands_S1"]
-                imgs_S2 = query_batch["bands_S2"]
 
-                labels = query_batch['labels']
-
-                h_i, h_j, projection_i, projection_j = net(imgs_S1, imgs_S2)
-                # projection_i and _j are the outputs after the mlp heads
-
-                fused = fusion_concat(projection_i, projection_j)
-
-                # Store all the results in the output file.
-                for name_S1, name_S2, label, feature in zip(query_batch['patch_name_S1'],
-                                                            query_batch['patch_name_S2'],
-                                                            labels.numpy(),
-                                                            fused.cpu().detach().numpy()):
-                    query_patch_names.append((name_S1, name_S2))
-                    query_labels.append(label)
-                    query_features.append(feature)
-
-
-    #h_i, h_j, projection_i, projection_j = net(inputs_s1, inputs_s2)
+    h_i, h_j, projection_i, projection_j = net(inputs_s1, inputs_s2)
 
 
 
 
 
     simclr = NTxentLoss(0.8,device="cpu")
-    cls = ClassificationLoss(projection_dim=2048, n_classes=19, fusion="avg")
+    cls = ClassificationLoss(projection_dim=128, n_classes=19, fusion="avg")
 
 
 
     loss_tracker = MetricTracker()
 
     #simclr_loss = simclr(projection_i, projection_j)
-    class_loss = cls(logits,labels)
+    #class_loss = cls(logits,labels)
 
-    # loss_concat = cls(fusion_concat(projection_i, projection_j),labels)
-    #loss_avg = cls(fusion_avg(projection_i, projection_j), labels)
-    #loss_sum = cls(fusion_sum(projection_i, projection_j), labels)
-    #loss_max = cls(fusion_max(projection_i, projection_j), labels)
+    #loss_concat = cls(fusion_concat(projection_i, projection_j),labels)
+    loss_avg = cls(fusion_avg(projection_i, projection_j), labels)
+    loss_sum = cls(fusion_sum(projection_i, projection_j), labels)
+    loss_max = cls(fusion_max(projection_i, projection_j), labels)
 
-    loss_tracker.update(class_loss.item())
+    loss_tracker.update(loss_avg.item())
     print('Train Loss: {:.6f}'.format(
         loss_tracker.avg
     ))
-    #print(h_i.shape, h_j.shape, projection_i.shape, projection_j.shape)
+    print(h_i.shape, h_j.shape, projection_i.shape, projection_j.shape)
 
-    # print(fusion_concat(projection_i, projection_j).shape)
-    #print(fusion_avg(projection_i, projection_j).shape)
-    #print(fusion_sum(projection_i, projection_j).shape)
-    #print(fusion_max(projection_i, projection_j).shape)
+    #print(fusion_concat(projection_i, projection_j).shape)
+    print(fusion_avg(projection_i, projection_j).shape)
+    print(fusion_sum(projection_i, projection_j).shape)
+    print(fusion_max(projection_i, projection_j).shape)
 
-    # print(loss_concat)
-    #print(loss_avg)
-    #print(loss_sum)
-    #print(loss_max)
+    #print(loss_concat)
+    print(loss_avg)
+    print(loss_sum)
+    print(loss_max)
