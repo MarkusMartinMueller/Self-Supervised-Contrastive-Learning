@@ -416,16 +416,16 @@ class Retrieval():
 if __name__ == "__main__":
     import argparse
 
-    #parser = argparse.ArgumentParser(description='Retrieval')
-    #parser.add_argument('--filepath', metavar='PATH', help='path to the saved args.yaml')
+    parser = argparse.ArgumentParser(description='Retrieval')
+    parser.add_argument('--filepath', metavar='PATH', help='path to the saved args.yaml')
 
-    #args = parser.parse_args()
-    #prep_logger('retrieval.log')
+    args = parser.parse_args()
+    prep_logger('retrieval.log')
     logger = get_logger()
 
     with timer_calc() as elapsed_time:
-        config = parse_config('C:/Users/Markus/Desktop/project/logs/Resnet50/joint_concat_adam_contrastive/parameters.yaml')
-        #config = parse_config(args.filepath)
+        #config = parse_config('C:/Users/Markus/Desktop/project/logs/Resnet50/joint_concat_adam_contrastive/parameters.yaml')
+        config = parse_config(args.filepath)
         retrieval = Retrieval(config)
 
         retrieval.feature_extraction()
