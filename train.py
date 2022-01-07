@@ -26,6 +26,9 @@ from utils import save_checkpoint
 from models import get_model
 from data import dataGenBigEarthLMDB_joint
 from loss import get_loss_func
+from utils import  Precision_score, Recall_score, F1_score, F2_score, Hamming_loss, Subset_accuracy, \
+    Accuracy_score, One_error, Coverage_error, Ranking_loss, LabelAvgPrec_score
+
 
 
 def main(filename):
@@ -89,6 +92,7 @@ def main(filename):
         #print("=> loading checkpoint '{}'".format(torch.load(config["state_dict"])["epoch"]))
         #model.load_state_dict(torch.load(config["state_dict"])["state_dict"])
         #optimizer.load_state_dict(torch.load(config["state_dict"])["optimizer"])
+        #
 
     for epoch in range(config["start_epoch"], config["epochs"]):
         print('Epoch {}/{}'.format(epoch + 1, config["epochs"]))
@@ -158,9 +162,24 @@ def train(model, trainloader, loss_func, optimizer, scheduler,epoch, train_write
 
 
 def val(valloader, model, loss_func, epoch, val_writer, config, device):
+    prec_score_ = Precision_score()
+    recal_score_ = Recall_score()
+    f1_score_ = F1_score()
+    f2_score_ = F2_score()
+    hamming_loss_ = Hamming_loss()
+    subset_acc_ = Subset_accuracy()
+    acc_score_ = Accuracy_score()
+    one_err_ = One_error()
+    coverage_err_ = Coverage_error()
+    rank_loss_ = Ranking_loss()
+    labelAvgPrec_score_ = LabelAvgPrec_score()
+
     model.eval()
 
     loss_tracker = MetricTracker()
+
+    y_true = []
+    predicted_probs = []
 
     with torch.no_grad():
         for idx, batch in enumerate(tqdm(valloader, desc="validation")):
@@ -178,10 +197,54 @@ def val(valloader, model, loss_func, epoch, val_writer, config, device):
             elif config["loss_func"] == "contrastive":
                 loss = loss_func(projection_i, projection_j)
 
+            probs = torch.sigmoid(loss).cpu().numpy()
+
+            predicted_probs += list(probs)
+            y_true += list(labels.cpu().numpy())
+
             loss_tracker.update(loss.item())
 
+    predicted_probs = np.asarray(predicted_probs)
+    y_predicted = (predicted_probs >= 0.5).astype(np.float32)
+    y_true = np.asarray(y_true)
+
+    macro_f1, micro_f1, sample_f1 = f1_score_(y_predicted, y_true)
+    macro_f2, micro_f2, sample_f2 = f2_score_(y_predicted, y_true)
+    macro_prec, micro_prec, sample_prec = prec_score_(y_predicted, y_true)
+    macro_rec, micro_rec, sample_rec = recal_score_(y_predicted, y_true)
+    hamming_loss = hamming_loss_(y_predicted, y_true)
+    subset_acc = subset_acc_(y_predicted, y_true)
+    macro_acc, micro_acc, sample_acc = acc_score_(y_predicted, y_true)
+
+    one_error = one_err_(predicted_probs, y_true)
+    coverage_error = coverage_err_(predicted_probs, y_true)
+    rank_loss = rank_loss_(predicted_probs, y_true)
+    labelAvgPrec = labelAvgPrec_score_(predicted_probs, y_true)
+
     info = {        'Val loss': loss_tracker.avg,
-    }
+                    "macroPrec": macro_prec,
+                    "microPrec": micro_prec,
+                    "samplePrec": sample_prec,
+                    "macroRec": macro_rec,
+                    "microRec": micro_rec,
+                    "sampleRec": sample_rec,
+                    "macroF1": macro_f1,
+                    "microF1": micro_f1,
+                    "sampleF1": sample_f1,
+                    "macroF2": macro_f2,
+                    "microF2": micro_f2,
+                    "sampleF2": sample_f2,
+                    "HammingLoss": hamming_loss,
+                    "subsetAcc": subset_acc,
+                    "macroAcc": macro_acc,
+                    "microAcc": micro_acc,
+                    "sampleAcc": sample_acc,
+                    "oneError": one_error,
+                    "coverageError": coverage_error,
+                    "rankLoss": rank_loss,
+                    "labelAvgPrec": labelAvgPrec
+
+                    }
     for tag, value in info.items():
         val_writer.add_scalar(tag, value, epoch)
 
