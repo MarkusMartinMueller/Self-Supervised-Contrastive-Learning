@@ -1,17 +1,17 @@
 # train options
 batch_size: 256
 start_epoch: 0
-epochs: 100
+epochs: 30
 pretrain: False
-type: "joint" # in the supervised setting, decision between joint or separate model
-train_csv: "/media/storagecube/markus/splits_mm_serbia/train.csv"
-val_csv: "/media/storagecube/markus/splits_mm_serbia/val.csv"
-test_csv: "/media/storagecube/markus/splits_mm_serbia/test.csv"
+type: "separate" # in the supervised setting, decision between joint or separate model
+train_csv: "/media/storagecube/markus/project/data/train.csv"
+val_csv: "/media/storagecube/markus/project/data/val.csv"
+test_csv: "/media/storagecube/markus/project/data/test.csv"
 loss_func: "classification"
 fusion: "concat"
 bigEarthPthLMDB_S2: "/media/storagecube/markus/project/data/BigEarth_Serbia_Summer_S2.lmdb"
 bigEarthPthLMDB_S1: "/media/storagecube/markus/project/data/BigEarth_Serbia_Summer_S1.lmdb"
-num_cpu: 10
+num_cpu: 40
 
 # model options
 name: "test"
@@ -21,14 +21,14 @@ out_channels: 32 # only used in joint mode for the Resnet model out-channels com
 
 # loss options
 optimizer: "adam"
-learning_rate: 0.001
+learning_rate: 0.0001
 weight_decay: 0.0
 scheduler: False # optional not used right now
 temperature: 0.1 # for NXT Loss
 
 
 # reload options
-state_dict: "/media/storagecube/markus/project/logs/test/joint_concat_adam/checkpoints_model_best.pth.tar" # set to the directory containing `checkpoint_##.tar`
+state_dict: "/media/storagecube/markus/project/logs/test/separate_concat_s2_sanity/checkpoints_model_best.pth.tar" # set to the directory containing `checkpoint_##.tar`
 
 
 
@@ -36,8 +36,8 @@ state_dict: "/media/storagecube/markus/project/logs/test/joint_concat_adam/check
 
 logging_params:
   save_dir: "logs/"
-  name: "joint_concat_adam" # maybe a special name
-  
+  name: "separate_concat_s2_sanity" # maybe a special name
+
 
 
 
