@@ -104,7 +104,7 @@ if __name__ == "__main__":
             "loss_func": args.loss_func,
             "type": typ,
             "fusion": fusion,
-            "state_dict": "/media/storagecube/markus/project/logs/test/{}_{}_adam/checkpoints_model_best.pth.tar".format(typ, fusion),
+            "state_dict": "/media/storagecube/markus/project/logs/test/{}_{}_adam_{}/checkpoints_model_best.pth.tar".format(typ, fusion,args.loss_func),
 
             'logging_params': {'save_dir': "logs/",
                                'name': '{}_{}_adam_{}'.format(typ, fusion,args.loss_func),
