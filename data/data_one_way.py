@@ -6,62 +6,9 @@ import torchvision.transforms as transforms
 import pickle
 from skimage import transform
 
-BAND_STATS = {
-    'S2': {
-        'mean': {
-            'B01': 340.76769064,
-            'B02': 429.9430203,
-            'B03': 614.21682446,
-            'B04': 590.23569706,
-            'B05': 950.68368468,
-            'B06': 1792.46290469,
-            'B07': 2075.46795189,
-            'B08': 2218.94553375,
-            'B8A': 2266.46036911,
-            'B09': 2246.0605464,
-            'B11': 1594.42694882,
-            'B12': 1009.32729131
-        },
-        'std': {
-            'B01': 554.81258967,
-            'B02': 572.41639287,
-            'B03': 582.87945694,
-            'B04': 675.88746967,
-            'B05': 729.89827633,
-            'B06': 1096.01480586,
-            'B07': 1273.45393088,
-            'B08': 1365.45589904,
-            'B8A': 1356.13789355,
-            'B09': 1302.3292881,
-            'B11': 1079.19066363,
-            'B12': 818.86747235
-        }
-    },
-    'S1': {
-        'mean': {
-            'VV': -12.619993741972035,
-            'VH': -19.29044597721542,
-            'VV/VH': 0.6525036195871579,
-        },
-        'std': {
-            'VV': 5.115911777546365,
-            'VH': 5.464428464912864,
-            'VV/VH': 30.75264076801808,
-        },
-        'min': {
-            'VV': -74.33214569091797,
-            'VH': -75.11137390136719,
-            'R': 3.21E-2
-        },
-        'max': {
-            'VV': 34.60696029663086,
-            'VH': 33.59768295288086,
-            'R': 1.08
-        }
-    }
-}
 
-bands_mean = {
+
+BANDS_MEAN = {
     'bands10_mean': [429.9430203, 614.21682446, 590.23569706, 2218.94553375],
     'bands20_mean': [950.68368468, 1792.46290469, 2075.46795189, 2266.46036911, 1594.42694882, 1009.32729131],
     'bands60_mean': [340.76769064, 2246.0605464],
@@ -70,7 +17,7 @@ bands_mean = {
     "vv/vh_mean": [0.6525036195871579]
 }
 
-bands_std = {
+BANDS_STD = {
     'bands10_std': [572.41639287, 582.87945694, 675.88746967, 1365.45589904],
     'bands20_std': [729.89827633, 1096.01480586, 1273.45393088, 1356.13789355, 1079.19066363, 818.86747235],
     'bands60_std': [554.81258967, 1302.3292881],
@@ -105,7 +52,7 @@ class dataGenBigEarthLMDB_joint:
         this function reads the csv files, but S1 Files have different names than the names in
         the csv
 
-        row[0] contains the Sentinel 2 image name as a string
+        row contains the Sentinel 2 image name as a string
         An adjustment happens via end and img with string concatenation
         """
 
@@ -134,11 +81,11 @@ class dataGenBigEarthLMDB_joint:
 
         patch_name = self.patch_names[idx]
 
-        return self._getDataUp(patch_name, idx)
+        return self._getDataUp(patch_name)
 
-    def _getDataUp(self, patch_name, idx):
-        normalize_S2 = Normalize(bands_mean, bands_std, modality="S2")
-        normalize_S1 = Normalize(bands_mean, bands_std, modality="S1")
+    def _getDataUp(self, patch_name):
+        normalize_S2 = Normalize(BANDS_MEAN, BANDS_STD, modality="S2")
+        normalize_S1 = Normalize(BANDS_MEAN, BANDS_STD, modality="S1")
 
         to_tensor_S2 = transforms.Compose([ToTensor(modality="S2")])
         to_tensor_S1 = transforms.Compose([ToTensor(modality="S1")])
@@ -188,7 +135,7 @@ def interpolate(bands, img10_shape=[120, 120]):
 
     bands = torch.unsqueeze(bands, 1)  # input for bicubic must be 4 dimensional, e.g. from (6,60,60) to (6,1,60,60)
 
-    bands_interpolated = torch.nn.functional.interpolate(bands, [120, 120], mode="bicubic")
+    bands_interpolated = torch.nn.functional.interpolate(bands, [120, 120], mode="bicubic",align_corners =False)
 
     return torch.squeeze(bands_interpolated, 1)
 
