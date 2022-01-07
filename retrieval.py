@@ -327,16 +327,16 @@ class Retrieval():
         recall = np.zeros(max_topk)
         f1_score = np.zeros(max_topk)
 
-        patches = []
+
 
         with h5py.File(self.retrieval_path, 'r+') as hf:
             for key in hf.keys():
                 if not key == 'distance':
                     del hf[key]
             distance = hf['distance']
-            import psutil
+
             num_cpus = self.config["num_cpu"]  # psutil.cpu_count()
-            #ray.init(num_cpus=num_cpus, object_store_memory=30 * 1024 * 1024 * 1024)
+            ray.init(num_cpus=num_cpus, object_store_memory=30 * 1024 * 1024 * 1024)
             result_ids = []
             process_thres = 1000
             for j in tqdm(range(len(query_names))):
@@ -346,9 +346,6 @@ class Retrieval():
                 ins_sorted_distance = np.argsort(ins_distance)
                 retrieved = ins_sorted_distance[range(max_topk)]
 
-                if j == 0:
-                    patches.append(query)
-                    patches.append(np.array(archive_names)[retrieved])
 
                 result_ids.append(single_query_metric.remote(max_topk, query_multi_hot, archive_labels[retrieved]))
                 if len(result_ids) >= process_thres:
@@ -399,7 +396,7 @@ class Retrieval():
             hf.create_dataset('precision', data=precision)
             hf.create_dataset('recall', data=recall)
             hf.create_dataset('f1score', data=f1_score)
-            hf.create_dataset('retrieved_patch_names',data = patches)
+            #hf.create_dataset('retrieved_patch_names',data = patches)
             for i in [8, 16, 32, 64, 128, max_topk]:
                 print('mAP@{}(%) {}'.format(i, average_precision[i - 1] * 100))
 
@@ -424,7 +421,7 @@ if __name__ == "__main__":
     logger = get_logger()
 
     with timer_calc() as elapsed_time:
-        #config = parse_config('C:/Users/Markus/Desktop/project/logs/Resnet50/joint_concat_adam_contrastive/parameters.yaml')
+        # config = parse_config('C:/Users/Markus/Desktop/project/logs/Resnet50/joint_concat_adam_contrastive/parameters.yaml')
         config = parse_config(args.filepath)
         retrieval = Retrieval(config)
 
