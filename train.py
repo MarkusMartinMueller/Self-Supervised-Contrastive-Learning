@@ -180,8 +180,7 @@ def val(valloader, model, loss_func, epoch, val_writer, config, device):
 
             loss_tracker.update(loss.item())
 
-    info = {
-        'Val loss': loss.item(),
+    info = {        'Val loss': loss_tracker.avg,
     }
     for tag, value in info.items():
         val_writer.add_scalar(tag, value, epoch)
