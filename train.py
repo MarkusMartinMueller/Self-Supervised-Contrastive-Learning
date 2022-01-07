@@ -122,7 +122,7 @@ def train(model, trainloader, loss_func, optimizer, scheduler,epoch, train_write
         imgs_S2 = batch["bands_S2"].to(device)
 
         labels = batch['labels'].to(device)
-
+        optimizer.zero_grad()
         h_i, h_j, projection_i, projection_j = model(imgs_S1,
                                                      imgs_S2)  # projection_i and _j are the outputs after the mlp heads
 
@@ -134,7 +134,7 @@ def train(model, trainloader, loss_func, optimizer, scheduler,epoch, train_write
             loss = loss_func(projection_i,projection_j)
 
         ### detach gradients
-        optimizer.zero_grad()
+
         loss.backward()
         optimizer.step()
         if config['scheduler']:
