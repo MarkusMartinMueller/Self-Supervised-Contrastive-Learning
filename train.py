@@ -160,7 +160,6 @@ def train(model, trainloader, loss_func, optimizer, scheduler,epoch, train_write
     # if config['scheduler_gamma']:
     # scheduler.step()
 
-
 def val(valloader, model, loss_func, epoch, val_writer, config, device):
     prec_score_ = Precision_score()
     recal_score_ = Recall_score()
