@@ -3,7 +3,6 @@ import os
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
-
 from tqdm import tqdm
 import h5py
 import ray
@@ -23,7 +22,6 @@ class Retrieval():
     def __init__(self, config):
         self.config = config
         self.logger = get_logger()
-
 
         self.query_feat_path = os.path.join(self.config['logging_params']['save_dir'], self.config['name'],
                                             self.config['logging_params']['name'], 'query.h5')
@@ -64,7 +62,7 @@ class Retrieval():
                                              pin_memory=True)
 
     def finish_retrieval(self):
-        #self.summary_writer.close()
+        # self.summary_writer.close()
         self.logger.info('Retrieval is finished')
 
     def feature_extraction(self):
@@ -327,14 +325,14 @@ class Retrieval():
         recall = np.zeros(max_topk)
         f1_score = np.zeros(max_topk)
 
-
+        # patches = np.empty((max_topk+1,2),dtype = 'object')
 
         with h5py.File(self.retrieval_path, 'r+') as hf:
             for key in hf.keys():
                 if not key == 'distance':
                     del hf[key]
             distance = hf['distance']
-
+            import psutil
             num_cpus = self.config["num_cpu"]  # psutil.cpu_count()
             ray.init(num_cpus=num_cpus, object_store_memory=30 * 1024 * 1024 * 1024)
             result_ids = []
@@ -345,7 +343,6 @@ class Retrieval():
                 ins_distance = distance[j]
                 ins_sorted_distance = np.argsort(ins_distance)
                 retrieved = ins_sorted_distance[range(max_topk)]
-
 
                 result_ids.append(single_query_metric.remote(max_topk, query_multi_hot, archive_labels[retrieved]))
                 if len(result_ids) >= process_thres:
@@ -396,7 +393,7 @@ class Retrieval():
             hf.create_dataset('precision', data=precision)
             hf.create_dataset('recall', data=recall)
             hf.create_dataset('f1score', data=f1_score)
-            #hf.create_dataset('retrieved_patch_names',data = patches)
+
             for i in [8, 16, 32, 64, 128, max_topk]:
                 print('mAP@{}(%) {}'.format(i, average_precision[i - 1] * 100))
 
