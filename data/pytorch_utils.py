@@ -170,7 +170,6 @@ def read_scale_raster(file_path, GDAL_EXISTED, RASTERIO_EXISTED):
     """
     read raster file with specified scale
     :param file_path:
-    :param scale:
     :return:
     """
     if GDAL_EXISTED:
@@ -205,7 +204,7 @@ class dataGenBigEarthTiff:
                  ):
 
 
-        # patches_names_list  is a list which containes lists of s2 and s1 strings, e.g. S2B_MSIL2A_20171107T105229_83_2 and  (S2B_MSIL2A_20171107T105229_S1_83_2) changing that to actual s1 name
+        # patches_names_list  is a list which containes lists of s2 and s1 strings, e.g. S2B_MSIL2A_20171107T105229_83_2 and corresponding sentinel 1
         self.Dir = bigEarthDir
         self.labels_folder = labels_folder
         self.bands10 = bands10
@@ -217,7 +216,7 @@ class dataGenBigEarthTiff:
         self.GDAL_EXISTED = GDAL_EXISTED
         self.RASTERIO_EXISTED = RASTERIO_EXISTED
 
-
+        # patches_names_list is a list with train,val and test splits
         self.total_patch = patch_names_list[0] + patch_names_list[1] + patch_names_list[2]
 
 
