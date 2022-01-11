@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torchvision
 from utils import fusion_concat, fusion_avg, fusion_sum, fusion_max
+import numpy as np
 
 
 class ClassificationLoss(nn.Module):
@@ -34,7 +35,7 @@ class ClassificationLoss(nn.Module):
 
         loss = self.criterion(logits, labels)
 
-        return loss
+        return loss  # ,map
 
 # if __name__ == "__main__":
 
