@@ -5,7 +5,7 @@ import csv
 import json
 #from tensorflow_utils import prep_tf_record_files
 from data import prep_lmdb_files
-import gdal
+import rasterio
 
 
 GDAL_EXISTED = False
@@ -18,9 +18,10 @@ with open('label_indices.json', 'rb') as f:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=
                                      'This script creates TFRecord files for the BigEarthNet train, validation and test splits')
-    parser.add_argument('-r1', '--root_folder_s1', dest='root_folder_s1',
-                        help='root folder 1 path contains  patch folders to sentinel 1')
-    parser.add_argument('-r2', '--root_folder_s2', dest="root_folder_s2")
+    parser.add_argument('-r1', '--root_folder', dest='root_folder',
+                        help='root folder  path contains  patch folders to sentinel 1 or sentinel 2')
+    parser.add_argument('-r2', '--label_folder', dest="label_folder",
+                        help='root ')
     parser.add_argument('-o', '--out_folder', dest='out_folder',
                         help='folder path containing resulting TFRecord or LMDB files')
     parser.add_argument('--update_json', default=False, action="store_true", help=
@@ -95,8 +96,8 @@ if __name__ == "__main__":
             exit()
 
         prep_tf_record_files(
-            args.root_folder_s1,
-            args.root_folder_s2,
+            args.root_folder,
+            args.label_folder,
             args.out_folder,
             split_names,
             patch_names_list,
@@ -107,9 +108,15 @@ if __name__ == "__main__":
         )
     elif args.library == 'pytorch':
 
+        try:
+            import lmdb
+        except ImportError:
+            print('ERROR: please install lmdb package to create lmdb files')
+            exit()
+
         prep_lmdb_files(
-            args.root_folder_s1,
-            args.root_folder_s2,
+            args.root_folder,
+            args.label_folder,
             args.out_folder,
             "S1",
             patch_names_list,
@@ -118,8 +125,8 @@ if __name__ == "__main__":
         )
 
         prep_lmdb_files(
-            args.root_folder_s2,
-            args.root_folder_s2,
+            args.root_folder,
+            args.label_folder,
             args.out_folder,
             "S2",
             patch_names_list,
