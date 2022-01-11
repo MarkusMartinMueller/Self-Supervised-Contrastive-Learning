@@ -152,23 +152,22 @@ def dict_concat(sample_S1: dict, sample_S2: dict,alternativ = False) -> dict:
     """
 
     concat_dict = {}  # dict where bands10 and bands20 and vv and vh are concatenated along there channel dimension, e.g. (4,120,120) and (6,120,120) -> (10,120,120), label stays the same
-    keys_S1 = list(sample_S1.keys())
-    keys_S2 = list(sample_S2.keys())
 
-    bands_S2 = torch.cat((sample_S2[keys_S2[0]], sample_S2[keys_S2[1]]))
-    bands_S1 = torch.cat((sample_S1[keys_S1[0]], sample_S1[keys_S1[1]]))
+
+    bands_S2 = torch.cat((sample_S2["bands10"], sample_S2["bands20"]))
+    bands_S1 = torch.cat((sample_S1["vv"], sample_S1["vh"]))
 
     if alternativ:
         concat_dict["bands"] = torch.cat((bands_S2,bands_S1))
-        concat_dict["labels"] = sample_S2[keys_S2[2]]
-        concat_dict["patch_name_S1"] = sample_S1[keys_S1[3]]
-        concat_dict["patch_name_S2"] = sample_S2[keys_S2[3]]
+        concat_dict["labels"] = sample_S2["label"]
+        concat_dict["patch_name_S1"] = sample_S1["patch_name"]
+        concat_dict["patch_name_S2"] = sample_S2["patch_name"]
     else:
         concat_dict["bands_S2"] = bands_S2
         concat_dict["bands_S1"] = bands_S1
-        concat_dict["labels"] = sample_S2[keys_S2[2]]
-        concat_dict["patch_name_S1"] = sample_S1[keys_S1[3]]
-        concat_dict["patch_name_S2"] = sample_S2[keys_S2[3]]
+        concat_dict["labels"] = sample_S2["label"]
+        concat_dict["patch_name_S1"] = sample_S1["patch_name"]
+        concat_dict["patch_name_S2"] = sample_S2["patch_name"]
 
     return concat_dict
 
@@ -207,6 +206,7 @@ class Normalize(object):
 
             for idx, (t, m, s) in enumerate(zip(band20, self.bands20_mean, self.bands20_std)):
                 band20_norm[idx] = np.divide(np.subtract(t, m), s)
+
 
             return {'bands10': band10_norm, 'bands20': band20_norm, 'label': label, 'patch_name': patch_name}
 
