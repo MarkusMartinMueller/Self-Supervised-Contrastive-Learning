@@ -117,25 +117,25 @@ def test(test_loader, model,save_path ,loss_func,  config, device):
 
             loss_tracker.update(loss.item())
 
-        predicted_probs = np.asarray(predicted_probs)
-        y_predicted = (predicted_probs >= 0.5).astype(np.float32)
-        y_true = np.asarray(y_true)
+    predicted_probs = np.asarray(predicted_probs)
+    y_predicted = (predicted_probs >= 0.5).astype(np.float32)
+    y_true = np.asarray(y_true)
 
-        macro_f1, micro_f1, sample_f1 = f1_score_(y_predicted, y_true)
-        macro_f2, micro_f2, sample_f2 = f2_score_(y_predicted, y_true)
-        macro_prec, micro_prec, sample_prec = prec_score_(y_predicted, y_true)
-        macro_rec, micro_rec, sample_rec = recal_score_(y_predicted, y_true)
-        hamming_loss = hamming_loss_(y_predicted, y_true)
-        subset_acc = subset_acc_(y_predicted, y_true)
-        macro_acc, micro_acc, sample_acc = acc_score_(y_predicted, y_true)
+    macro_f1, micro_f1, sample_f1 = f1_score_(y_predicted, y_true)
+    macro_f2, micro_f2, sample_f2 = f2_score_(y_predicted, y_true)
+    macro_prec, micro_prec, sample_prec = prec_score_(y_predicted, y_true)
+    macro_rec, micro_rec, sample_rec = recal_score_(y_predicted, y_true)
+    hamming_loss = hamming_loss_(y_predicted, y_true)
+    subset_acc = subset_acc_(y_predicted, y_true)
+    macro_acc, micro_acc, sample_acc = acc_score_(y_predicted, y_true)
 
-        one_error = one_err_(predicted_probs, y_true)
-        coverage_error = coverage_err_(predicted_probs, y_true)
-        rank_loss = rank_loss_(predicted_probs, y_true)
-        labelAvgPrec = labelAvgPrec_score_(predicted_probs, y_true)
+    one_error = one_err_(predicted_probs, y_true)
+    coverage_error = coverage_err_(predicted_probs, y_true)
+    rank_loss = rank_loss_(predicted_probs, y_true)
+    labelAvgPrec = labelAvgPrec_score_(predicted_probs, y_true)
 
 
-        info = {
+    info = {
         'Test loss': loss_tracker.avg,
         "macroPrec": macro_prec,
         "microPrec": micro_prec,
