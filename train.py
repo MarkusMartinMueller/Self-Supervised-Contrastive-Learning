@@ -8,7 +8,6 @@ from datetime import datetime
 from tensorboardX import SummaryWriter
 import os
 
-
 # local imports
 
 
@@ -26,9 +25,8 @@ from utils import save_checkpoint
 from models import get_model
 from data import dataGenBigEarthLMDB_joint
 from loss import get_loss_func
-from utils import  Precision_score, Recall_score, F1_score, F2_score, Hamming_loss, Subset_accuracy, \
+from utils import Precision_score, Recall_score, F1_score, F2_score, Hamming_loss, Subset_accuracy, \
     Accuracy_score, One_error, Coverage_error, Ranking_loss, LabelAvgPrec_score
-
 
 
 def main(filename):
@@ -79,7 +77,8 @@ def main(filename):
     optimizer = get_optimizer(model, config["optimizer"], config["learning_rate"], config["weight_decay"])
     scheduler = get_scheduler(optimizer, config["scheduler"], config["learning_rate"], config["epochs"],
                               train_data_loader)
-    loss_func = get_loss_func(config["loss_func"], device,config["projection_dim"], config["fusion"],config["temperature"])
+    loss_func = get_loss_func(config["loss_func"], device, config["projection_dim"], config["fusion"],
+                              config["temperature"])
     loss_func.to(device)
 
     ## save params in yaml file
@@ -87,18 +86,14 @@ def main(filename):
 
     min_val_loss = math.inf
 
-    #pretrained = True
-    #if pretrained:
-        #print("=> loading checkpoint '{}'".format(torch.load(config["state_dict"])["epoch"]))
-        #model.load_state_dict(torch.load(config["state_dict"])["state_dict"])
-        #optimizer.load_state_dict(torch.load(config["state_dict"])["optimizer"])
-        #
+
+    
 
     for epoch in range(config["start_epoch"], config["epochs"]):
         print('Epoch {}/{}'.format(epoch + 1, config["epochs"]))
         print('-' * 10)
 
-        train(model, train_data_loader, loss_func, optimizer, scheduler,epoch, train_writer, config, device)
+        train(model, train_data_loader, loss_func, optimizer, scheduler, epoch, train_writer, config, device)
 
         if epoch % 2 == 0:
 
@@ -112,11 +107,11 @@ def main(filename):
                 }, checkpoint_dir)
 
                 min_val_loss = val_loss
-    #train_writer.close()
+    # train_writer.close()
     # val_writer.close()
 
 
-def train(model, trainloader, loss_func, optimizer, scheduler,epoch, train_writer, config, device):
+def train(model, trainloader, loss_func, optimizer, scheduler, epoch, train_writer, config, device):
     loss_tracker = MetricTracker()
 
     model.train()
@@ -135,7 +130,7 @@ def train(model, trainloader, loss_func, optimizer, scheduler,epoch, train_write
         if config["loss_func"] == "classification":
             loss = loss_func(fused, labels)
         elif config["loss_func"] == "contrastive":
-            loss = loss_func(projection_i,projection_j)
+            loss = loss_func(projection_i, projection_j)
 
         ### detach gradients
 
@@ -159,6 +154,7 @@ def train(model, trainloader, loss_func, optimizer, scheduler,epoch, train_write
 
     # if config['scheduler_gamma']:
     # scheduler.step()
+
 
 def val(valloader, model, loss_func, epoch, val_writer, config, device):
     prec_score_ = Precision_score()
@@ -196,7 +192,11 @@ def val(valloader, model, loss_func, epoch, val_writer, config, device):
             elif config["loss_func"] == "contrastive":
                 loss = loss_func(projection_i, projection_j)
 
-            probs = torch.sigmoid(loss).cpu().numpy()
+            if config["fusion"] == "concat":
+                fc = torch.nn.Linear(2 * config['projection_dim'], 19).to(device)
+            else:
+                fc = torch.nn.Linear(config['projection_dim'], 19).to(device)
+            probs = torch.sigmoid(fc(fused)).cpu().detach().numpy()
 
             predicted_probs += list(probs)
             y_true += list(labels.cpu().numpy())
@@ -220,30 +220,30 @@ def val(valloader, model, loss_func, epoch, val_writer, config, device):
     rank_loss = rank_loss_(predicted_probs, y_true)
     labelAvgPrec = labelAvgPrec_score_(predicted_probs, y_true)
 
-    info = {        'Val loss': loss_tracker.avg,
-                    "macroPrec": macro_prec,
-                    "microPrec": micro_prec,
-                    "samplePrec": sample_prec,
-                    "macroRec": macro_rec,
-                    "microRec": micro_rec,
-                    "sampleRec": sample_rec,
-                    "macroF1": macro_f1,
-                    "microF1": micro_f1,
-                    "sampleF1": sample_f1,
-                    "macroF2": macro_f2,
-                    "microF2": micro_f2,
-                    "sampleF2": sample_f2,
-                    "HammingLoss": hamming_loss,
-                    "subsetAcc": subset_acc,
-                    "macroAcc": macro_acc,
-                    "microAcc": micro_acc,
-                    "sampleAcc": sample_acc,
-                    "oneError": one_error,
-                    "coverageError": coverage_error,
-                    "rankLoss": rank_loss,
-                    "labelAvgPrec": labelAvgPrec
+    info = {'Val loss': loss_tracker.avg,
+            "macroPrec": macro_prec,
+            "microPrec": micro_prec,
+            "samplePrec": sample_prec,
+            "macroRec": macro_rec,
+            "microRec": micro_rec,
+            "sampleRec": sample_rec,
+            "macroF1": macro_f1,
+            "microF1": micro_f1,
+            "sampleF1": sample_f1,
+            "macroF2": macro_f2,
+            "microF2": micro_f2,
+            "sampleF2": sample_f2,
+            "HammingLoss": hamming_loss,
+            "subsetAcc": subset_acc,
+            "macroAcc": macro_acc,
+            "microAcc": micro_acc,
+            "sampleAcc": sample_acc,
+            "oneError": one_error,
+            "coverageError": coverage_error,
+            "rankLoss": rank_loss,
+            "labelAvgPrec": labelAvgPrec
 
-                    }
+            }
     for tag, value in info.items():
         val_writer.add_scalar(tag, value, epoch)
 
@@ -262,4 +262,4 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     main(args.filepath)
-    #main("C:/Users/Markus/Desktop/project/config/args.yaml")
+    # main("C:/Users/Markus/Desktop/project/config/args.yaml")
