@@ -40,7 +40,7 @@ class Retrieval():
 
         self.model.to(self.device)
 
-        query_dataGen = dataGenBigEarthLMDB_joint(
+        self.query_dataGen = dataGenBigEarthLMDB_joint(
             bigEarthPthLMDB_S2=self.config["bigEarthPthLMDB_S2"],
             bigEarthPthLMDB_S1=self.config["bigEarthPthLMDB_S1"],
             state='train',
@@ -48,7 +48,7 @@ class Retrieval():
             val_csv=self.config["val_csv"],
             test_csv=self.config["test_csv"]
         )
-        archive_dataGen = dataGenBigEarthLMDB_joint(
+        self.archive_dataGen = dataGenBigEarthLMDB_joint(
             bigEarthPthLMDB_S2=self.config["bigEarthPthLMDB_S2"],
             bigEarthPthLMDB_S1=self.config["bigEarthPthLMDB_S1"],
             state='test',
@@ -56,9 +56,9 @@ class Retrieval():
             val_csv=self.config["val_csv"],
             test_csv=self.config["test_csv"]
         )
-        self.query_dataloader = DataLoader(query_dataGen, self.config["batch_size"], num_workers=0, shuffle=False,
+        self.query_dataloader = DataLoader(self.query_dataGen, self.config["batch_size"], num_workers=0, shuffle=False,
                                            pin_memory=True)
-        self.archive_dataloader = DataLoader(archive_dataGen, self.config["batch_size"], num_workers=0, shuffle=False,
+        self.archive_dataloader = DataLoader(self.archive_dataGen, self.config["batch_size"], num_workers=0, shuffle=False,
                                              pin_memory=True)
 
     def finish_retrieval(self):
@@ -397,11 +397,12 @@ class Retrieval():
             for i in [8, 16, 32, 64, 128, max_topk]:
                 print('mAP@{}(%) {}'.format(i, average_precision[i - 1] * 100))
 
-    def restore_weigths(self, state_dict_path):
+    def restore_weigths(self):
 
         if torch.cuda.is_available():
-
-            self.model.load_state_dict(torch.load(self.state_dict_path)["state_dict"])
+            self.logger.info("Loading weigths from {}".format(self.state_dict_path))
+            checkpoint = torch.load(self.state_dict_path)
+            self.model.load_state_dict(checkpoint["state_dict"])
 
         else:
             self.model.load_state_dict(torch.load(self.state_dict_path, map_location=torch.device('cpu'))["state_dict"])
@@ -410,16 +411,16 @@ class Retrieval():
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(description='Retrieval')
-    parser.add_argument('--filepath', metavar='PATH', help='path to the saved args.yaml')
+    #parser = argparse.ArgumentParser(description='Retrieval')
+    #parser.add_argument('--filepath', metavar='PATH', help='path to the saved args.yaml')
 
-    args = parser.parse_args()
-    prep_logger('retrieval.log')
+    #args = parser.parse_args()
+    #prep_logger('retrieval.log')
     logger = get_logger()
 
     with timer_calc() as elapsed_time:
-        # config = parse_config('C:/Users/Markus/Desktop/project/logs/Resnet50/joint_concat_adam_contrastive/parameters.yaml')
-        config = parse_config(args.filepath)
+        config = parse_config('C:/Users/Markus/Desktop/project/logs/Resnet50/joint_concat_adam_contrastive/parameters.yaml')
+        #config = parse_config(args.filepath)
         retrieval = Retrieval(config)
 
         retrieval.feature_extraction()
