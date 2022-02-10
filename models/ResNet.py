@@ -1,6 +1,14 @@
 import torch
 from torch import nn
 from torchvision import models
+import torch.nn.init as init
+
+
+def weights_init_kaiming(m):
+    classname = m.__class__.__name__
+    if classname.find('Conv2d') != -1:
+        init.kaiming_normal_(m.weight.data)
+
 
 
 class ResNet50_S2(nn.Module):
@@ -25,6 +33,8 @@ class ResNet50_S2(nn.Module):
             resnet.layer4,
             resnet.avgpool
         )
+
+        self.apply(weights_init_kaiming)
 
 
     def forward(self, x):
@@ -55,7 +65,7 @@ class ResNet50_S1(nn.Module):
             resnet.layer4,
             resnet.avgpool
         )
-
+        self.apply(weights_init_kaiming)
 
 
     def forward(self, x):
@@ -115,7 +125,7 @@ class ResNet50_joint(nn.Module):
             resnet.layer4,
             resnet.avgpool
         )
-
+        self.apply(weights_init_kaiming)
     def forward(self, x):
         input_channels = x.shape[1]
 
@@ -154,8 +164,7 @@ class ResNet50_bands_12(nn.Module):
             resnet.avgpool
         )
 
-
-
+        self.apply(weights_init_kaiming)
     def forward(self, x):
         x = self.encoder(x)
 

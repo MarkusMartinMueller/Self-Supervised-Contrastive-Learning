@@ -9,6 +9,7 @@ def get_optimizer(model,optimizer_name,LR,weight_decay):
         optimizer = torch.optim.Adam(model.parameters(),
                 lr=LR,
                 weight_decay=weight_decay)
+
     else:
         raise ValueError('Invalid optimizer.')
 

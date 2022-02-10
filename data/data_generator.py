@@ -49,11 +49,7 @@ class dataGenBigEarthLMDB_joint:
 
     def readingCSV(self):
         """
-        this function reads the csv files, but S1 Files have different names than the names in
-        the csv
-
-        row contains the Sentinel 2 image name as a string
-        An adjustment happens via end and img with string concatenation
+        this function reads the csv file
         """
 
         if self.state == 'train':
@@ -204,8 +200,10 @@ class Normalize(object):
             for idx, (t, m, s) in enumerate(zip(band10, self.bands10_mean, self.bands10_std)):
                 band10_norm[idx] = np.divide(np.subtract(t, m), s)
 
+
             for idx, (t, m, s) in enumerate(zip(band20, self.bands20_mean, self.bands20_std)):
                 band20_norm[idx] = np.divide(np.subtract(t, m), s)
+
 
 
             return {'bands10': band10_norm, 'bands20': band20_norm, 'label': label, 'patch_name': patch_name}

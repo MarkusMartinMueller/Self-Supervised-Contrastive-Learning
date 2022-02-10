@@ -112,6 +112,8 @@ if __name__ == "__main__":
     train_csv = "C:/Users/Markus/Desktop/splits_mm_serbia/train.csv"
     val_csv = "C:/Users/Markus/Desktop/splits_mm_serbia/val.csv"
     test_csv = "C:/Users/Markus/Desktop/splits_mm_serbia/test.csv"
+    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+    print("Using {} device".format(device))
 
     train_dataGen = dataGenBigEarthLMDB_joint(
         bigEarthPthLMDB_S2="C:/Users/Markus/Desktop/project/data/BigEarth_Serbia_Summer_S2.lmdb",
@@ -121,27 +123,34 @@ if __name__ == "__main__":
         val_csv=val_csv,
         test_csv=test_csv
     )
-    train_data_loader = DataLoader(train_dataGen, batch_size=64, num_workers=0, shuffle=False, pin_memory=False)
+    train_data_loader = DataLoader(train_dataGen, batch_size=128, num_workers=0, shuffle=True, pin_memory=False)
+    net = get_model(path_type="joint", n_features=2048, projection_dim=128, out_channels=32)
+    check = torch.load('C:/Users/Markus/Desktop/project/logs/MM_paper/fourth_try/check_model_best.pth.tar',map_location=torch.device('cpu'))
+    net.load_state_dict(check["state_dict"])
 
+
+    #net = ResNet50_bands_12()
     image = next(iter(train_data_loader))
-
-
     #inputs = image["bands"]
+    print(image["bands_S1"].size(0))
     inputs_s1 = image["bands_S1"]
     inputs_s2 = image["bands_S2"]
     labels = image['labels']
-    net = get_model(path_type="joint", n_features=2048, projection_dim=128, out_channels=32)
-
-
-
     h_i, h_j, projection_i, projection_j = net(inputs_s1, inputs_s2)
+    cls = ClassificationLoss(projection_dim=128, n_classes=19, fusion="avg")
+
+    #logits = net(inputs)
+    #loss = cls(logits,labels)
+
+
+
 
 
 
 
 
     simclr = NTxentLoss(0.8,device="cpu")
-    cls = ClassificationLoss(projection_dim=128, n_classes=19, fusion="avg")
+
 
 
 
