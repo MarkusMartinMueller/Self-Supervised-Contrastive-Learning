@@ -4,9 +4,9 @@ This repository contains code to use deep learning models, pre-trained on the Bi
 
 For BigEarthNet-19 labels, it is highly recommended to first check the [BigEarthNet-19 Deep Learning Models repository](https://git.tu-berlin.de/rsim/BigEarthNet-S2_19-classes_models).
 
-To run the code use this docker : docker container start 53c5c9d0d3821e18a8ef915ce3367f13f3d39714f1beb02041eb05ec3c300eb9 
 
-It has all required libraries installed
+
+
 # Training
 
 The script `project/train.py` is for training the CNN models. This file expects the following parameters:
@@ -57,7 +57,7 @@ inside called `training`. If you run :
           
       `tensorboard --logdir . --bind_all` 
 
-you can look at the train and validation loss at the give port, e.g. `http://erde.rsim.tu-berlin.de:6006`
+you can look at the train and validation loss at the provided port
 
 <strong>Important note:</strong> 
 
